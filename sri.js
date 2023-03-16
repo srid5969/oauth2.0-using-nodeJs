@@ -1,7 +1,7 @@
 var express = require("express"),
   bodyParser = require("body-parser"),
   OAuth2Server = require("oauth2-server");
-const model = require("./model"); // replace with your implementation of the model interface
+const model = require("./model");
 
 var app = express();
 
@@ -22,13 +22,24 @@ app.get("/", (req, res) => {
   res.send("hello from simple server :)");
 });
 
-app.post("/get", (req, res) => {
-  OAuth2Server.Request;
+app.post("/get", (req, res) => {    
+  console.log(req);
+
+  req = {req}
   app.oauth.token(
     new OAuth2Server.Request(req),
     new OAuth2Server.Response(res)
   ).then((data)=>res.send(data))
   .catch((data)=>res.send(data))
+});
+app.post("/ref", (req, res) => {    
+  console.log(req);
+  app.oauth.authenticate(
+    new OAuth2Server.Request(req),
+    new OAuth2Server.Response(res)
+  ).then((data)=>res.send(data))
+  .catch((data)=>{res.send(data)
+  console.log(data);})
 });
 
 
