@@ -4,8 +4,8 @@ import {
   OAuth2Server,
   Token,
   User,
-  PasswordModel,
-  Callback,
+  PasswordModel,ServerOptions, ExtensionModel, RefreshTokenModel, ClientCredentialsModel, AuthorizationCodeModel
+  
 } from "oauth2-server";
 
 let users = [
@@ -22,9 +22,10 @@ let users = [
 ];
 let secretKey = "secret_key";
 let expiresIn = "1h";
-export const option: PasswordModel = {
+export const option:AuthorizationCodeModel | ClientCredentialsModel | RefreshTokenModel | PasswordModel | ExtensionModel = {
   //getClient BaseModel
   getClient: async (
+    
     clientId: string,
     clientSecret: string
   ): Promise<Client | Falsey> => {
@@ -75,25 +76,19 @@ export const option: PasswordModel = {
   ): Promise<string> => {
     return "";
   },
-  getAccessToken: function (
-    accessToken: string,
-    callback?: Callback<Token> | undefined
-  ): Promise<Falsey | Token> {
+  getAccessToken: async function (accessToken: string): Promise<Falsey | Token> {
     throw new Error("Function not implemented.");
   },
-  verifyScope: function (
+  verifyScope: async function (
     token: Token,
-    scope: string | string[],
-    callback?: Callback<boolean> | undefined
+    scope: string | string[]
   ): Promise<boolean> {
     throw new Error("Function not implemented.");
+    return false
   },
 };
-const server:typeof OAuth2Server = new OAuth2Server({
+const server = new OAuth2Server({
   model: option,
-  //   grants: ["password", "resfresh_token"],
   allowBearerTokensInQueryString: true,
   accessTokenLifetime: 4 * 60 * 60,
-
-  debug: true,
 });
