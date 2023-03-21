@@ -2,7 +2,7 @@ import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
 import oauth2Server,{ InvalidRequestError, InvalidTokenError,Request as OAuthRequest,Response as OAuthResponse,PasswordModel} from "oauth2-server";
 import {option} from "./oauth20.library";
-let model:PasswordModel=option
+let model=option
 
 export default function Oauth20Middleware(
   req: Request,
@@ -17,7 +17,6 @@ export default function Oauth20Middleware(
       // const response:OAuthResponse = new OAuthRequest(res);   
         const server  = new oauth2Server({
           model:model,
-        //   grants: ['password','resfresh_token'],
           accessTokenLifetime: 3600,
           allowExtendedTokenAttributes: true,
         //   debug: true
