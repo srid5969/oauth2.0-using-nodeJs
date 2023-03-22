@@ -6,15 +6,15 @@ export interface IToken extends Document {
   client: any;
   user: any;
   scope: string;
-  expires: Date;
+  expires: any;
 }
 const tokenSchema = new Schema<IToken>({
-  accessToken: { type: String, required: true },
-  refreshToken: { type: String, required: true },
-  user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  client: { type: Schema.Types.ObjectId, ref: "Client", required: true },
-  scope: { type: String, required: true },
-  expires: { type: Date, required: true },
+  accessToken: { type: String},
+  refreshToken: { type: String},
+  user: { type: Schema.Types.Mixed, ref: "User"},
+  client: { type: Schema.Types.Mixed, ref: "Client"},
+  scope: { type: String},
+  expires: { type: Object},
 });
 
 export const TokenModel = model<IToken>("Token", tokenSchema);
@@ -36,7 +36,7 @@ export const TokenModel = model<IToken>("Token", tokenSchema);
 
 
 // ===================================================
-type Falsey = "" | 0 | false | null | undefined;
+export type Falsey = "" | 0 | false | null | undefined;
 
 export interface User {
   [key: string]: any;

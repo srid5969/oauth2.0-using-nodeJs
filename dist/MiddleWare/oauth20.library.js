@@ -27,11 +27,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.option = void 0;
-const oauth2_server_1 = require("oauth2-server");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const uuid = __importStar(require("uuid"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const mongoose_1 = require("mongoose");
 const model_1 = require("./model");
 let tokens; //mongodb
 let users = [
@@ -70,10 +68,10 @@ exports.option = {
     //getUser BaseModel
     getUser: async (username, password) => {
         return new Promise(async (resolve, reject) => {
-            let data = await (0, mongoose_1.model)("users").findOne({ username }, { _id: 1, password: 1, username: 1 });
+            let data = await model_1.TokenModel.findOne({ username }, { _id: 1, password: 1, username: 1 });
             if (!(username && password)) {
                 reject({
-                    message: "First enter username and password miss Frontend developer",
+                    message: "please enter username and password",
                 });
                 return;
             }
@@ -145,9 +143,9 @@ exports.option = {
         return false;
     },
 };
-const server = new oauth2_server_1.OAuth2Server({
-    model: exports.option,
-    allowBearerTokensInQueryString: true,
-    accessTokenLifetime: 4 * 60 * 60,
-});
-server;
+// const server = new OAuth2Server({
+//   model: option,
+//   allowBearerTokensInQueryString: true,
+//   accessTokenLifetime: 4 * 60 * 60,
+// });
+// server;

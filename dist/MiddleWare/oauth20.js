@@ -36,13 +36,24 @@ function Oauth20Middleware(req, res, next) {
         let password = req.body.password;
         if (username && password) {
             const request = new oauth2_server_1.Request(req);
-            // const response:OAuthResponse = new OAuthRequest(res);   
+            const response = new oauth2_server_1.Response(res);
             const server = new oauth2_server_1.default({
                 model: model,
                 accessTokenLifetime: 3600,
                 allowExtendedTokenAttributes: true,
                 //   debug: true
             });
+            server.token(request, response).then((token) => {
+                console.log(token);
+                // The resource owner granted the access request.
+            })
+                .catch((err) => {
+                console.log(err);
+                // The request was invalid or not authorized.
+            });
+        }
+        else {
+            res.json({ message: "please enter username and password" });
         }
     }
     else {

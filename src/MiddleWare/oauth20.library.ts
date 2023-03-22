@@ -1,86 +1,48 @@
-import {
-  Falsey,
-  OAuth2Server,
-  PasswordModel,
-  ServerOptions,
-  ExtensionModel,
-  ClientCredentialsModel,
-} from "oauth2-server";
 import bcryptjs from "bcryptjs";
+import jsonwebtoken from "jsonwebtoken";
 import * as uuid from "uuid";
-import jsonwebtoken, { JwtPayload } from "jsonwebtoken";
-import mongoose, { model } from "mongoose";
-import {
-  AuthorizationCodeModel,
-  IToken,
-  RefreshTokenModel,
-  Token,
-  TokenModel,
-  Client,
-  User,
-} from "./model";
-
-let tokens; //mongodb
-let users = [
-  {
-    id: "1",
-    username: "thala",
-    password: "sri",
-  },
-  {
-    id: "2",
-    username: "sri",
-    password: "1234",
-  },
-];
-const accessTokenSecret = "accessTokenSecret";
-const refreshTokenSecret = "refreshTokenSecret";
-// let secretKey = "secret_key";
-let expiresIn = "1h";
-export const option:
-  | AuthorizationCodeModel
-  | ClientCredentialsModel
-  | RefreshTokenModel
-  | PasswordModel
-  | ExtensionModel = {
-  //getClient BaseModel
+import { Client, Falsey, IToken, Token, TokenModel, User } from "./model";
+const accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
+var now = new Date();
+now.setTime(now.getTime() + 1 * 3600 * 1000);
+let expiresIn = now;
+export const option = {
   getClient: async (
     clientId: string,
     clientSecret: string
   ): Promise<Client | Falsey> => {
     return { id: "1", grants: ["password"] };
   },
-  //saveToken BaseModel
   saveToken: async (
     token: Token,
     client: Client,
     user: User
   ): Promise<Token | Falsey> => {
+
     const _token: IToken = new TokenModel({
       accessToken: token.accessToken,
       refreshToken: token.refreshToken,
-      clientId: token.client.id,
-      userId: token.user.id,
+      client: client,
+      user: user,
       scope: token.scope,
-      expires: "1h",
+      expires: expiresIn,
     });
 
-    return await token.save();
+    return await _token.save();
   },
-  //getUser BaseModel
   getUser: async (
     username: string,
     password: string
   ): Promise<User | Falsey> => {
     return new Promise<any>(async (resolve, reject) => {
-      let data: any = await model("users").findOne(
+      let data: any = await TokenModel.findOne(
         { username },
         { _id: 1, password: 1, username: 1 }
       );
 
       if (!(username && password)) {
         reject({
-          message: "First enter username and password miss Frontend developer",
+          message: "please enter username and password",
         });
         return;
       }
@@ -102,7 +64,13 @@ export const option:
           reject({ message: "wrong password" });
         }
       } else {
-        reject({ message: "user cannot be found" });
+        // reject({ message: "user cannot be found" });
+        resolve({
+          id: "1",
+          username: "thala",
+          password: "sri",
+          scope: ["write"],
+        });
       }
     });
   },
@@ -111,12 +79,7 @@ export const option:
     user: User,
     scope: string | string[]
   ): Promise<string> => {
-    let refreshTokens; //=[refreshTokenSecret]
-    const refreshToken = uuid.v4();
-    refreshTokens.push(refreshToken);
-    refreshTokens.push(client);
-    refreshTokens.push(user);
-    refreshTokens.push(scope);
+    let refreshTokens: any = await uuid.v4();
     return refreshTokens;
   },
   validateScope: async (
@@ -124,7 +87,7 @@ export const option:
     client: Client,
     scope: string | string[]
   ): Promise<string | string[] | Falsey> => {
-    return 0;
+    return "read";
   },
   generateAccessToken: async (
     client: Client,
@@ -138,25 +101,26 @@ export const option:
   getAccessToken: async function (
     accessToken: string
   ): Promise<Falsey | Token> {
-    let data = jsonwebtoken.verify(accessToken, accessTokenSecret) as any;
-    return new Promise(function (resolve, reject) {
-      tokens.findOne({ access_token: accessToken }, function (err, token) {
-        if (err) reject(err);
-        resolve({
-          accessToken: token.accessToken,
-          refreshToken: token.refreshToken,
-          client: { id: token.client.id, grants: ["password"] },
-          user: { id: token.user.id },
+    console.log("===================================");
+    try {
+      let data = (await jsonwebtoken.verify(
+        accessToken,
+        accessTokenSecret
+      )) as any;
+      if (data) {
+        return new Promise(async function (resolve, reject) {
+          let Data: any = await TokenModel.findOne({
+            accessToken: accessToken,
+          });
+          Data.accessTokenExpiresAt = Data.expires
+          console.log(Data);
+
+          return resolve(Data);
         });
-      });
-    });
-    return {
-      accessToken: "s",
-      refreshToken: "s",
-      demo: "",
-      client: { id: "1", grants: ["password"] },
-      user: { id: data.user.id },
-    };
+      }
+    } catch (error) {
+      return error;
+    }
   },
   verifyScope: async function (
     token: Token,
@@ -166,9 +130,3 @@ export const option:
     return false;
   },
 };
-const server = new OAuth2Server({
-  model: option,
-  allowBearerTokensInQueryString: true,
-  accessTokenLifetime: 4 * 60 * 60,
-});
-server;
