@@ -5,7 +5,6 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import db from "./common/manager.ts/config";
 import oauth20 from "./MiddleWare/oauth20";
-require('dotenv').config();
 
 const port: number = 8000;
 mongoose.connect(db);
@@ -22,6 +21,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(express.json());
 app.use(oauth20);
+app.use(express.json());
+
 // app.use(logResponseBody);
 
 

@@ -15,8 +15,11 @@ export default function Oauth20Middleware(
   res: Response,
   next: NextFunction
 ) {
+  req.headers["content-type"] = "application/x-www-form-urlencoded";
   const request = new OAuthRequest(req);
   const response = new OAuthResponse(res);
+  // console.log(request.headers);
+
   const server = new oauth2Server({
     model: model,
     accessTokenLifetime: 3600,
@@ -24,6 +27,13 @@ export default function Oauth20Middleware(
     //   debug: true
   });
   if (req.originalUrl === "/user/login") {
+    // req.body.
+    request.body.client_id=12
+    request.body.client_secret=12
+    request.body.grant_type='password'
+    
+    console.log(request.body);
+    
     let username = req.body.username;
     let password = req.body.password;
     if (username && password) {
@@ -34,6 +44,7 @@ export default function Oauth20Middleware(
           res.send(token);
         })
         .catch((err) => {
+          res.send(err);
           console.log(err);
         });
     } else {

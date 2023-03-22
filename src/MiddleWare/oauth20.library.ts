@@ -1,7 +1,10 @@
 import bcryptjs from "bcryptjs";
+require("dotenv").config();
+
 import jsonwebtoken from "jsonwebtoken";
 import * as uuid from "uuid";
 import { Client, Falsey, IToken, Token, TokenModel, User } from "./model";
+import { OAuthError } from "oauth2-server";
 const accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
 var now = new Date();
 now.setTime(now.getTime() + 1 * 3600 * 1000);
@@ -18,7 +21,6 @@ export const option = {
     client: Client,
     user: User
   ): Promise<Token | Falsey> => {
-
     const _token: IToken = new TokenModel({
       accessToken: token.accessToken,
       refreshToken: token.refreshToken,
@@ -41,7 +43,8 @@ export const option = {
       );
 
       if (!(username && password)) {
-        reject({
+       new OAuthError('please enter username and password',{name: 'no_username_or_password',code: 404})
+       return reject({
           message: "please enter username and password",
         });
         return;
@@ -57,9 +60,7 @@ export const option = {
         const Data = await bcryptjs.compare(password, data.password);
         if (Data) {
           return resolve(Data);
-          // await generateToken(data._id)
-          //   .catch((err) => reject({message:err.toString()}))
-          //   .then((token) => resolve({ username:data.username,id:data._id,token }));
+         
         } else {
           reject({ message: "wrong password" });
         }
@@ -96,6 +97,7 @@ export const option = {
   ): Promise<string> => {
     return jsonwebtoken.sign({ ...user, client, scope }, accessTokenSecret, {
       expiresIn: "1h",
+      algorithm:"HS256"
     });
   },
   getAccessToken: async function (
@@ -103,16 +105,16 @@ export const option = {
   ): Promise<Falsey | Token> {
     console.log("===================================");
     try {
-      let data = (await jsonwebtoken.verify(
+      let data:any = (await jsonwebtoken.verify(
         accessToken,
-        accessTokenSecret
+        accessTokenSecret,{algorithms:['HS256']}
       )) as any;
       if (data) {
         return new Promise(async function (resolve, reject) {
           let Data: any = await TokenModel.findOne({
             accessToken: accessToken,
           });
-          Data.accessTokenExpiresAt = Data.expires
+          Data.accessTokenExpiresAt = Data.expires;
           console.log(Data);
 
           return resolve(Data);
@@ -126,7 +128,8 @@ export const option = {
     token: Token,
     scope: string | string[]
   ): Promise<boolean> {
-    throw new Error("Function not implemented.");
+    throw new Error("Function verifyScope not implemented.");
     return false;
   },
 };
+ 
