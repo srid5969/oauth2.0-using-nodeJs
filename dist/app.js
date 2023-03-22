@@ -20,8 +20,8 @@ app.use(body_parser_1.default.json());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
 app.use(express_1.default.json());
 app.use(oauth20_1.default);
+app.use(express_1.default.json());
 // app.use(logResponseBody);
-
 app.listen(port, () => {
     console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
 });
