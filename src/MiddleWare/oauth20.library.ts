@@ -4,7 +4,7 @@ require("dotenv").config();
 import jsonwebtoken from "jsonwebtoken";
 import * as uuid from "uuid";
 import { Client, Falsey, IToken, Token, TokenModel, User } from "./model";
-import { OAuthError } from "oauth2-server";
+import { OAuthError, RefreshToken } from "oauth2-server";
 const accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
 var now = new Date();
 now.setTime(now.getTime() + 1 * 3600 * 1000);
@@ -14,7 +14,8 @@ export const option = {
     clientId: string,
     clientSecret: string
   ): Promise<Client | Falsey> => {
-    return { id: "1", grants: ["password"] };
+    if (clientId == "0") return { id: "1", grants: ["refresh_token"] };
+    return { id: "1", grants: ["password", ""] };
   },
   saveToken: async (
     token: Token,
@@ -43,8 +44,11 @@ export const option = {
       );
 
       if (!(username && password)) {
-       new OAuthError('please enter username and password',{name: 'no_username_or_password',code: 404})
-       return reject({
+        new OAuthError("please enter username and password", {
+          name: "no_username_or_password",
+          code: 404,
+        });
+        return reject({
           message: "please enter username and password",
         });
         return;
@@ -60,7 +64,6 @@ export const option = {
         const Data = await bcryptjs.compare(password, data.password);
         if (Data) {
           return resolve(Data);
-         
         } else {
           reject({ message: "wrong password" });
         }
@@ -97,25 +100,25 @@ export const option = {
   ): Promise<string> => {
     return jsonwebtoken.sign({ ...user, client, scope }, accessTokenSecret, {
       expiresIn: "1h",
-      algorithm:"HS256"
+      algorithm: "HS256",
     });
   },
   getAccessToken: async function (
     accessToken: string
   ): Promise<Falsey | Token> {
-    console.log("===================================");
     try {
-      let data:any = (await jsonwebtoken.verify(
+      let data: any = (await jsonwebtoken.verify(
         accessToken,
-        accessTokenSecret,{algorithms:['HS256']}
+        accessTokenSecret,
+        { algorithms: ["HS256"] }
       )) as any;
       if (data) {
         return new Promise(async function (resolve, reject) {
           let Data: any = await TokenModel.findOne({
             accessToken: accessToken,
           });
+          Data.user = data;
           Data.accessTokenExpiresAt = Data.expires;
-          console.log(Data);
 
           return resolve(Data);
         });
@@ -131,5 +134,23 @@ export const option = {
     throw new Error("Function verifyScope not implemented.");
     return false;
   },
+  revokeToken: async (token: RefreshToken | Token): Promise<boolean> => {
+    let data = await TokenModel.findOne({ accessToken: token.refreshToken });
+    if (data) {
+      return true;
+    }
+    return false;
+  },
+  getRefreshToken: async (
+    refreshToken: string
+  ): Promise<RefreshToken | Falsey> => {
+    let data = await TokenModel.findOne({ refreshToken });
+    return data;
+    // refreshToken: string;
+    // refreshTokenExpiresAt?: Date | undefined;
+    // scope?: string | string[] | undefined;
+    // client: Client;
+    // user: User;
+    // [key: string]: any;
+  },
 };
- 
