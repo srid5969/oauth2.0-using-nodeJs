@@ -27,19 +27,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.option = void 0;
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 require("dotenv").config();
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const uuid = __importStar(require("uuid"));
 const model_1 = require("./model");
 const oauth2_server_1 = require("oauth2-server");
+const user_1 = __importDefault(require("../user/model/user"));
 const accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
 var now = new Date();
 now.setTime(now.getTime() + 1 * 3600 * 1000);
 let expiresIn = now;
 exports.option = {
     getClient: async (clientId, clientSecret) => {
-        return { id: "1", grants: ["password"] };
+        const data = await model_1.ClientModel.findOne({
+            id: clientId,
+            secret: clientSecret,
+        });
+        return data;
     },
     saveToken: async (token, client, user) => {
         const _token = new model_1.TokenModel({
@@ -52,17 +57,18 @@ exports.option = {
         });
         return await _token.save();
     },
-    getUser: async (username, password) => {
+    getUser: async (username, plainPassword) => {
         return new Promise(async (resolve, reject) => {
-            let data = await model_1.TokenModel.findOne({ username }, { _id: 1, password: 1, username: 1 });
-            if (!(username && password)) {
-                new oauth2_server_1.OAuthError('please enter username and password', { name: 'no_username_or_password', code: 404 });
+            if (!(username && plainPassword)) {
+                new oauth2_server_1.OAuthError("please enter username and password", {
+                    name: "no_username_or_password",
+                    code: 404,
+                });
                 return reject({
                     message: "please enter username and password",
                 });
-                return;
             }
-            //if  data
+            const data = await user_1.default.findOne({ username }, { password: 1 });
             if (data) {
                 /**
                  * TODO : Login
@@ -70,22 +76,21 @@ exports.option = {
                  * @param password  plain text password
                  * @param data.password bcrypt password
                  */
-                const Data = await bcryptjs_1.default.compare(password, data.password);
+                const Data = await bcrypt_1.default.compare(plainPassword, data.password);
                 if (Data) {
-                    return resolve(Data);
+                    let userData = { username, id: data._id };
+                    return resolve(userData);
                 }
                 else {
                     reject({ message: "wrong password" });
                 }
             }
             else {
-                // reject({ message: "user cannot be found" });
-                resolve({
-                    id: "1",
-                    username: "thala",
-                    password: "sri",
-                    scope: ["write"],
-                });
+                const err = new oauth2_server_1.AccessDeniedError("Bad Request", { code: 404 });
+                // err.message === 'Bad Request'
+                // err.code === 400
+                // err.name === 'access_denied'
+                reject(err);
             }
         });
     },
@@ -93,26 +98,22 @@ exports.option = {
         let refreshTokens = await uuid.v4();
         return refreshTokens;
     },
-    validateScope: async (user, client, scope) => {
-        return "read";
-    },
     generateAccessToken: async (client, user, scope) => {
         return jsonwebtoken_1.default.sign({ ...user, client, scope }, accessTokenSecret, {
             expiresIn: "1h",
-            algorithm: "HS256"
+            algorithm: "HS256",
         });
     },
     getAccessToken: async function (accessToken) {
-        console.log("===================================");
         try {
-            let data = (await jsonwebtoken_1.default.verify(accessToken, accessTokenSecret, { algorithms: ['HS256'] }));
+            let data = (await jsonwebtoken_1.default.verify(accessToken, accessTokenSecret, { algorithms: ["HS256"] }));
             if (data) {
                 return new Promise(async function (resolve, reject) {
                     let Data = await model_1.TokenModel.findOne({
                         accessToken: accessToken,
                     });
+                    Data.user = data;
                     Data.accessTokenExpiresAt = Data.expires;
-                    console.log(Data);
                     return resolve(Data);
                 });
             }
@@ -124,5 +125,28 @@ exports.option = {
     verifyScope: async function (token, scope) {
         throw new Error("Function verifyScope not implemented.");
         return false;
+    },
+    revokeToken: async (token) => {
+        console.log(token);
+        let data = await model_1.TokenModel.findOne({ accessToken: token.refreshToken });
+        if (data) {
+            return true;
+        }
+        throw new oauth2_server_1.InvalidTokenError("Access Token Expired");
+    },
+    getRefreshToken: async (refreshToken) => {
+        let data = await model_1.TokenModel.findOne({ refreshToken });
+        console.log(data);
+        return data;
+        // refreshToken: string;
+        // refreshTokenExpiresAt?: Date | undefined;
+        // scope?: string | string[] | undefined;
+        // client: Client;
+        // user: User;
+        // [key: string]: any;
+    },
+    validateScope: async (user, client, scope) => {
+        console.log(user, client, scope);
+        return "read";
     },
 };

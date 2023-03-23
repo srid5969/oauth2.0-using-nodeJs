@@ -27,34 +27,50 @@ const oauth2_server_1 = __importStar(require("oauth2-server"));
 const oauth20_library_1 = require("./oauth20.library");
 let model = oauth20_library_1.option;
 function Oauth20Middleware(req, res, next) {
-    req.headers["content-type"] = "application/x-www-form-urlencoded";
     const request = new oauth2_server_1.Request(req);
     const response = new oauth2_server_1.Response(res);
-    // console.log(request.headers);
+    request.headers["content-type"] = "application/x-www-form-urlencoded";
     const server = new oauth2_server_1.default({
         model: model,
         accessTokenLifetime: 3600,
         allowExtendedTokenAttributes: true,
-        //   debug: true
     });
+    console.log(req.originalUrl);
+    if (req.originalUrl === "/token/auth") {
+        // request.body.grant_type = "refresh_token";
+        // request.body.client_id = "0";
+        // request.body.client_secret = 12;
+        server
+            .token(request, response)
+            .then((token) => {
+            res.send(token);
+        })
+            .catch((err) => {
+            console.log(err);
+            err.statusCode
+                ? res.status(err.statusCode).json(err)
+                : res.send(err).status(400);
+        });
+        return;
+    }
     if (req.originalUrl === "/user/login") {
         // req.body.
         request.body.client_id = 12;
         request.body.client_secret = 12;
-        request.body.grant_type = 'password';
-        console.log(request.body);
+        request.body.grant_type = "password";
         let username = req.body.username;
         let password = req.body.password;
         if (username && password) {
             server
                 .token(request, response)
                 .then((token) => {
-                console.log(token);
                 res.send(token);
             })
                 .catch((err) => {
-                res.send(err);
                 console.log(err);
+                err.statusCode
+                    ? res.status(err.statusCode).json(err)
+                    : res.send(err).status(400);
             });
         }
         else {
@@ -62,26 +78,26 @@ function Oauth20Middleware(req, res, next) {
         }
     }
     else {
-        // console.log(req.headers.authorization);
         let token = req.headers.authorization.split(" ") || "";
-        console.log(token[1]);
-        server
-            .authenticate(request, response)
-            .then((token) => {
-            console.log(token);
-            res.send(token);
-        })
-            .catch((err) => {
-            res.send(err);
-            console.log(err);
-        });
+        if (token[1]) {
+            server
+                .authenticate(request, response)
+                .then((token) => {
+                // return res.send(token);
+                next();
+            })
+                .catch((err) => {
+                return err.statusCode
+                    ? res.status(err.statusCode).json(err)
+                    : res.send(err).status(400);
+            });
+        }
         // jsonwebtoken.verify(
         //   token[1],
         //   "accessTokenSecret",
         //   // { algorithms: ["HS256"] },
         //   (err, decodedToken) => {
         //     if (err) throw err;
-        //     console.log(decodedToken); // this is your decoded JWT with user details
         //   }
         // );
     }

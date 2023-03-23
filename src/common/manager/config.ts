@@ -1,5 +1,4 @@
 const mongoString =
-  // "mongodb+srv://british-empire:sri@british-empire.wcsq6jq.mongodb.net/sample-Inventory-System-Management?retryWrites=true&w=majority";
-  "mongodb+srv://british-empire:sri@british-empire.wcsq6jq.mongodb.net/Inventory-System-Management?retryWrites=true&w=majority";
+  "mongodb+srv://british-empire:sri@sridhar.4yi8kt0.mongodb.net/OAuth20-Token?retryWrites=true&w=majority";
 
 export default  mongoString ;

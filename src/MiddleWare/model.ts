@@ -3,7 +3,7 @@ import { Schema, model, Document } from "mongoose";
 export interface IToken extends Document {
   accessToken: string;
   refreshToken: string;
-  client: any;
+  client: Client;
   user: any;
   scope: string;
   expires: any;
@@ -11,8 +11,8 @@ export interface IToken extends Document {
 const tokenSchema = new Schema<IToken>({
   accessToken: { type: String},
   refreshToken: { type: String},
-  user: { type: Schema.Types.Mixed, ref: "User"},
-  client: { type: Schema.Types.Mixed, ref: "Client"},
+  user: { type: Schema.Types.Mixed, ref: "users"},
+  client: { type: Schema.Types.Mixed, ref: "client"},
   scope: { type: String},
   expires: { type: Object},
 });
@@ -20,8 +20,12 @@ const tokenSchema = new Schema<IToken>({
 export const TokenModel = model<IToken>("Token", tokenSchema);
 
 
+const clientSchema=new Schema<Client>({
+  grants:{type:Schema.Types.Mixed},
+  id:{type:Schema.Types.Mixed},
+})
 
-
+export const ClientModel = model<Client>("client", clientSchema);
 
 
 

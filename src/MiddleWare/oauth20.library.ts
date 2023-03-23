@@ -1,10 +1,25 @@
-import bcryptjs from "bcryptjs";
+import bcryptjs from "bcrypt";
 require("dotenv").config();
 
 import jsonwebtoken from "jsonwebtoken";
 import * as uuid from "uuid";
-import { Client, Falsey, IToken, Token, TokenModel, User } from "./model";
-import { OAuthError, RefreshToken } from "oauth2-server";
+import {
+  Client,
+  ClientModel,
+  Falsey,
+  IToken,
+  Token,
+  TokenModel,
+  User,
+} from "./model";
+import {
+  AccessDeniedError,
+  InvalidTokenError,
+  OAuthError,
+  RefreshToken,
+} from "oauth2-server";
+import user, { IUser } from "../user/model/user";
+
 const accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
 var now = new Date();
 now.setTime(now.getTime() + 1 * 3600 * 1000);
@@ -14,8 +29,11 @@ export const option = {
     clientId: string,
     clientSecret: string
   ): Promise<Client | Falsey> => {
-    if (clientId == "0") return { id: "1", grants: ["refresh_token"] };
-    return { id: "1", grants: ["password", ""] };
+    const data: Client = await ClientModel.findOne({
+      id: clientId,
+      secret: clientSecret,
+    });
+    return data;
   },
   saveToken: async (
     token: Token,
@@ -35,15 +53,10 @@ export const option = {
   },
   getUser: async (
     username: string,
-    password: string
+    plainPassword: string
   ): Promise<User | Falsey> => {
     return new Promise<any>(async (resolve, reject) => {
-      let data: any = await TokenModel.findOne(
-        { username },
-        { _id: 1, password: 1, username: 1 }
-      );
-
-      if (!(username && password)) {
+      if (!(username && plainPassword)) {
         new OAuthError("please enter username and password", {
           name: "no_username_or_password",
           code: 404,
@@ -51,9 +64,8 @@ export const option = {
         return reject({
           message: "please enter username and password",
         });
-        return;
       }
-      //if  data
+      const data: IUser = await user.findOne({ username }, { password: 1 });
       if (data) {
         /**
          * TODO : Login
@@ -61,20 +73,20 @@ export const option = {
          * @param password  plain text password
          * @param data.password bcrypt password
          */
-        const Data = await bcryptjs.compare(password, data.password);
+
+        const Data = await bcryptjs.compare(plainPassword, data.password);
         if (Data) {
-          return resolve(Data);
+          let userData = { username, id: data._id };
+          return resolve(userData);
         } else {
           reject({ message: "wrong password" });
         }
       } else {
-        // reject({ message: "user cannot be found" });
-        resolve({
-          id: "1",
-          username: "thala",
-          password: "sri",
-          scope: ["write"],
-        });
+        const err = new AccessDeniedError("Bad Request", { code: 404 });
+        // err.message === 'Bad Request'
+        // err.code === 400
+        // err.name === 'access_denied'
+        reject(err);
       }
     });
   },
@@ -85,13 +97,6 @@ export const option = {
   ): Promise<string> => {
     let refreshTokens: any = await uuid.v4();
     return refreshTokens;
-  },
-  validateScope: async (
-    user: User,
-    client: Client,
-    scope: string | string[]
-  ): Promise<string | string[] | Falsey> => {
-    return "read";
   },
   generateAccessToken: async (
     client: Client,
@@ -135,16 +140,21 @@ export const option = {
     return false;
   },
   revokeToken: async (token: RefreshToken | Token): Promise<boolean> => {
+    console.log(token);
+    
     let data = await TokenModel.findOne({ accessToken: token.refreshToken });
     if (data) {
+
       return true;
     }
-    return false;
+    throw new InvalidTokenError("Access Token Expired"); 
   },
   getRefreshToken: async (
     refreshToken: string
   ): Promise<RefreshToken | Falsey> => {
     let data = await TokenModel.findOne({ refreshToken });
+    console.log(data);
+
     return data;
     // refreshToken: string;
     // refreshTokenExpiresAt?: Date | undefined;
@@ -152,5 +162,13 @@ export const option = {
     // client: Client;
     // user: User;
     // [key: string]: any;
+  },
+  validateScope: async (
+    user: User,
+    client: Client,
+    scope: string | string[]
+  ): Promise<string | string[] | Falsey> => {
+    console.log(user, client, scope);
+    return "read";
   },
 };
