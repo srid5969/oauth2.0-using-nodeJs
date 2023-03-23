@@ -124,14 +124,21 @@ exports.option = {
         return false;
     },
     revokeToken: async (token) => {
-        let data = await model_1.TokenModel.findOne({ refreshToken: token.refreshToken });
+        let data = await model_1.TokenModel.findOneAndUpdate({ refreshToken: token.refreshToken }, { refreshTokenExpired: true });
+        console.log("==============================================", data);
         if (data) {
             return true;
         }
         throw new oauth2_server_1.InvalidTokenError("Access Token Expired");
     },
     getRefreshToken: async (refreshToken) => {
-        let data = await model_1.TokenModel.findOne({ refreshToken }).populate({ path: "client" });
+        let present = new Date();
+        console.log(present);
+        // refreshTokenExpired
+        let data = await model_1.TokenModel.findOne({
+            refreshToken: refreshToken,
+            refreshTokenExpired: false,
+        }).populate({ path: "client" });
         return data;
     },
     validateScope: async (user, client, scope) => {

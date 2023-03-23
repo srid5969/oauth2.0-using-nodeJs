@@ -18,7 +18,7 @@ import {
   RefreshToken,
 } from "oauth2-server";
 import user, { IUser } from "../user/model/user";
-import { model } from 'mongoose';
+import { model } from "mongoose";
 
 const accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
 var now = new Date();
@@ -139,8 +139,12 @@ export const option = {
     return false;
   },
   revokeToken: async (token: RefreshToken | Token): Promise<boolean> => {
-    
-    let data = await TokenModel.findOne({ refreshToken: token.refreshToken });
+    let data = await TokenModel.findOneAndUpdate(
+      { refreshToken: token.refreshToken },
+      { refreshTokenExpired: true }
+    );
+    console.log("==============================================", data);
+
     if (data) {
       return true;
     }
@@ -149,10 +153,15 @@ export const option = {
   getRefreshToken: async (
     refreshToken: string
   ): Promise<RefreshToken | Falsey> => {
-    let data = await TokenModel.findOne({ refreshToken }).populate({ path:"client"})
+    let present: Date = new Date();
+    console.log(present);
+    // refreshTokenExpired
+    let data = await TokenModel.findOne({
+      refreshToken: refreshToken,
+      refreshTokenExpired: false,
+    }).populate({ path: "client" });
 
     return data;
-
   },
   validateScope: async (
     user: User,
