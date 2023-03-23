@@ -7,7 +7,7 @@ const express_1 = __importDefault(require("express"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
 const body_parser_1 = __importDefault(require("body-parser"));
-const config_1 = __importDefault(require("./common/manager.ts/config"));
+const config_1 = __importDefault(require("./common/manager/config"));
 const oauth20_1 = __importDefault(require("./MiddleWare/oauth20"));
 const port = 8000;
 mongoose_1.default.connect(config_1.default);
@@ -21,7 +21,6 @@ app.use(body_parser_1.default.urlencoded({ extended: true }));
 app.use(express_1.default.json());
 app.use(oauth20_1.default);
 app.use(express_1.default.json());
-// app.use(logResponseBody);
 app.listen(port, () => {
     console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
 });
