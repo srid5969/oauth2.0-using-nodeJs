@@ -9,6 +9,7 @@ const tokenSchema = new mongoose_1.Schema({
     client: { type: mongoose_1.Schema.Types.Mixed, ref: "client" },
     scope: { type: String },
     expires: { type: Object },
+    refreshTokenExpired: { type: Boolean, default: false }
 });
 exports.TokenModel = (0, mongoose_1.model)("Token", tokenSchema);
 const clientSchema = new mongoose_1.Schema({

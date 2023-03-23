@@ -7,6 +7,7 @@ export interface IToken extends Document {
   user: any;
   scope: string;
   expires: any;
+  refreshTokenExpired:boolean
 }
 const tokenSchema = new Schema<IToken>({
   accessToken: { type: String},
@@ -15,6 +16,7 @@ const tokenSchema = new Schema<IToken>({
   client: { type: Schema.Types.Mixed, ref: "client"},
   scope: { type: String},
   expires: { type: Object},
+  refreshTokenExpired:{type:Boolean,default:false}
 });
 
 export const TokenModel = model<IToken>("Token", tokenSchema);
