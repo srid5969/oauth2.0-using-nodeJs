@@ -9,7 +9,6 @@ import oauth2Server, {
 } from "oauth2-server";
 import { option } from "./oauth20.library";
 
-
 export default function Oauth20Middleware(
   req: Request,
   res: Response,
@@ -23,11 +22,8 @@ export default function Oauth20Middleware(
     accessTokenLifetime: 3600,
     allowExtendedTokenAttributes: true,
   });
-  console.log(req.originalUrl);
 
   if (req.originalUrl === "/token/auth") {
-
-
     server
       .token(request, response)
       .then((token) => {
@@ -35,7 +31,6 @@ export default function Oauth20Middleware(
       })
       .catch((err) => {
         console.log(err);
-
         err.statusCode
           ? res.status(err.statusCode).json(err)
           : res.send(err).status(400);
@@ -43,8 +38,6 @@ export default function Oauth20Middleware(
     return;
   }
   if (req.originalUrl === "/user/login") {
-
-
     let username = req.body.username;
     let password = req.body.password;
     if (username && password) {
@@ -76,13 +69,6 @@ export default function Oauth20Middleware(
             : res.send(err).status(400);
         });
     }
-    // jsonwebtoken.verify(
-    //   token[1],
-    //   "accessTokenSecret",
-    //   // { algorithms: ["HS256"] },
-    //   (err, decodedToken) => {
-    //     if (err) throw err;
-    //   }
-    // );
+
   }
 }

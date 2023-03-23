@@ -87,9 +87,6 @@ exports.option = {
             }
             else {
                 const err = new oauth2_server_1.AccessDeniedError("Bad Request", { code: 404 });
-                // err.message === 'Bad Request'
-                // err.code === 400
-                // err.name === 'access_denied'
                 reject(err);
             }
         });
@@ -136,12 +133,6 @@ exports.option = {
     getRefreshToken: async (refreshToken) => {
         let data = await model_1.TokenModel.findOne({ refreshToken }).populate({ path: "client" });
         return data;
-        // refreshToken: string;
-        // refreshTokenExpiresAt?: Date | undefined;
-        // scope?: string | string[] | undefined;
-        // client: Client;
-        // user: User;
-        // [key: string]: any;
     },
     validateScope: async (user, client, scope) => {
         return "read";

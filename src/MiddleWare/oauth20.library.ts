@@ -1,6 +1,5 @@
 import bcryptjs from "bcrypt";
 require("dotenv").config();
-
 import jsonwebtoken from "jsonwebtoken";
 import * as uuid from "uuid";
 import {
@@ -85,9 +84,7 @@ export const option = {
         }
       } else {
         const err = new AccessDeniedError("Bad Request", { code: 404 });
-        // err.message === 'Bad Request'
-        // err.code === 400
-        // err.name === 'access_denied'
+
         reject(err);
       }
     });
@@ -155,12 +152,7 @@ export const option = {
     let data = await TokenModel.findOne({ refreshToken }).populate({ path:"client"})
 
     return data;
-    // refreshToken: string;
-    // refreshTokenExpiresAt?: Date | undefined;
-    // scope?: string | string[] | undefined;
-    // client: Client;
-    // user: User;
-    // [key: string]: any;
+
   },
   validateScope: async (
     user: User,

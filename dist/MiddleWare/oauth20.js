@@ -34,7 +34,6 @@ function Oauth20Middleware(req, res, next) {
         accessTokenLifetime: 3600,
         allowExtendedTokenAttributes: true,
     });
-    console.log(req.originalUrl);
     if (req.originalUrl === "/token/auth") {
         server
             .token(request, response)
@@ -83,14 +82,6 @@ function Oauth20Middleware(req, res, next) {
                     : res.send(err).status(400);
             });
         }
-        // jsonwebtoken.verify(
-        //   token[1],
-        //   "accessTokenSecret",
-        //   // { algorithms: ["HS256"] },
-        //   (err, decodedToken) => {
-        //     if (err) throw err;
-        //   }
-        // );
     }
 }
 exports.default = Oauth20Middleware;
