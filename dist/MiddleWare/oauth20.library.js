@@ -36,7 +36,7 @@ const oauth2_server_1 = require("oauth2-server");
 const user_1 = __importDefault(require("../user/model/user"));
 const accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
 var now = new Date();
-now.setTime(now.getTime() + 1 * 3600 * 1000);
+now.setTime(now.getTime() + 1 * 60 * 1000);
 let expiresIn = now;
 exports.option = {
     getClient: async (clientId, clientSecret) => {
