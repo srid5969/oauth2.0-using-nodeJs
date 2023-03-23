@@ -5,6 +5,9 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import db from "./common/manager/config";
 import oauth20 from "./MiddleWare/oauth20";
+import user from "./user/router/user.router";
+
+
 const port: number = 8000;
 mongoose.connect(db);
 const database = mongoose.connection;
@@ -16,7 +19,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(oauth20);
-app.use(express.json());
+app.use(user);
 app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
 });

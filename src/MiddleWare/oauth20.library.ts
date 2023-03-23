@@ -22,7 +22,7 @@ import { model } from 'mongoose';
 
 const accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
 var now = new Date();
-now.setTime(now.getTime() + 1 * 3600 * 1000);
+now.setTime(now.getTime() + 1 * 60 * 1000);
 let expiresIn = now;
 export const option = {
   getClient: async (
