@@ -25,21 +25,17 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const oauth2_server_1 = __importStar(require("oauth2-server"));
 const oauth20_library_1 = require("./oauth20.library");
-let model = oauth20_library_1.option;
 function Oauth20Middleware(req, res, next) {
     const request = new oauth2_server_1.Request(req);
     const response = new oauth2_server_1.Response(res);
     request.headers["content-type"] = "application/x-www-form-urlencoded";
     const server = new oauth2_server_1.default({
-        model: model,
+        model: oauth20_library_1.option,
         accessTokenLifetime: 3600,
         allowExtendedTokenAttributes: true,
     });
     console.log(req.originalUrl);
     if (req.originalUrl === "/token/auth") {
-        // request.body.grant_type = "refresh_token";
-        // request.body.client_id = "0";
-        // request.body.client_secret = 12;
         server
             .token(request, response)
             .then((token) => {
@@ -54,10 +50,6 @@ function Oauth20Middleware(req, res, next) {
         return;
     }
     if (req.originalUrl === "/user/login") {
-        // req.body.
-        request.body.client_id = 12;
-        request.body.client_secret = 12;
-        request.body.grant_type = "password";
         let username = req.body.username;
         let password = req.body.password;
         if (username && password) {
@@ -67,7 +59,6 @@ function Oauth20Middleware(req, res, next) {
                 res.send(token);
             })
                 .catch((err) => {
-                console.log(err);
                 err.statusCode
                     ? res.status(err.statusCode).json(err)
                     : res.send(err).status(400);

@@ -127,16 +127,14 @@ exports.option = {
         return false;
     },
     revokeToken: async (token) => {
-        console.log(token);
-        let data = await model_1.TokenModel.findOne({ accessToken: token.refreshToken });
+        let data = await model_1.TokenModel.findOne({ refreshToken: token.refreshToken });
         if (data) {
             return true;
         }
         throw new oauth2_server_1.InvalidTokenError("Access Token Expired");
     },
     getRefreshToken: async (refreshToken) => {
-        let data = await model_1.TokenModel.findOne({ refreshToken });
-        console.log(data);
+        let data = await model_1.TokenModel.findOne({ refreshToken }).populate({ path: "client" });
         return data;
         // refreshToken: string;
         // refreshTokenExpiresAt?: Date | undefined;
@@ -146,7 +144,6 @@ exports.option = {
         // [key: string]: any;
     },
     validateScope: async (user, client, scope) => {
-        console.log(user, client, scope);
         return "read";
     },
 };
