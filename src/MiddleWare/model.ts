@@ -12,8 +12,8 @@ export interface IToken extends Document {
 const tokenSchema = new Schema<IToken>({
   accessToken: { type: String},
   refreshToken: { type: String},
-  user: { type: Schema.Types.Mixed, ref: "users"},
-  client: { type: Schema.Types.Mixed, ref: "client"},
+  user: { type: Schema.Types.ObjectId, ref: "users"},
+  client: { type: Schema.Types.ObjectId, ref: "client"},
   scope: { type: String},
   expires: { type: Object},
   refreshTokenExpired:{type:Boolean,default:false}

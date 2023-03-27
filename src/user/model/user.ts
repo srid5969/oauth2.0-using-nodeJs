@@ -6,6 +6,7 @@ export interface IUser {
   password: string;
   role: string;
 }
+//
 export const userSchema: Schema = new Schema<IUser>(
   {
     username: { type:String,required: true, unique: true },

@@ -5,8 +5,8 @@ const mongoose_1 = require("mongoose");
 const tokenSchema = new mongoose_1.Schema({
     accessToken: { type: String },
     refreshToken: { type: String },
-    user: { type: mongoose_1.Schema.Types.Mixed, ref: "users" },
-    client: { type: mongoose_1.Schema.Types.Mixed, ref: "client" },
+    user: { type: mongoose_1.Schema.Types.ObjectId, ref: "users" },
+    client: { type: mongoose_1.Schema.Types.ObjectId, ref: "client" },
     scope: { type: String },
     expires: { type: Object },
     refreshTokenExpired: { type: Boolean, default: false }

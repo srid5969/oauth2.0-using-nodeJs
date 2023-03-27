@@ -27,13 +27,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.option = void 0;
-const bcrypt_1 = __importDefault(require("bcrypt"));
 require("dotenv").config();
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const uuid = __importStar(require("uuid"));
-const model_1 = require("./model");
 const oauth2_server_1 = require("oauth2-server");
+const uuid = __importStar(require("uuid"));
 const user_1 = __importDefault(require("../user/model/user"));
+const model_1 = require("./model");
 const accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
 var now = new Date();
 now.setTime(now.getTime() + 1 * 60 * 1000);
@@ -47,7 +47,7 @@ exports.option = {
         return data;
     },
     saveToken: async (token, client, user) => {
-        const _token = new model_1.TokenModel({
+        const saveToken = new model_1.TokenModel({
             accessToken: token.accessToken,
             refreshToken: token.refreshToken,
             client: client,
@@ -55,7 +55,7 @@ exports.option = {
             scope: token.scope,
             expires: expiresIn,
         });
-        return await _token.save();
+        return (await saveToken.save()).populate({ path: "user", select: "username" });
     },
     getUser: async (username, plainPassword) => {
         return new Promise(async (resolve, reject) => {
@@ -78,7 +78,7 @@ exports.option = {
                  */
                 const Data = await bcrypt_1.default.compare(plainPassword, data.password);
                 if (Data) {
-                    let userData = { username, id: data._id };
+                    let userData = { username, id: data._id, _id: data._id };
                     return resolve(userData);
                 }
                 else {
@@ -125,7 +125,6 @@ exports.option = {
     },
     revokeToken: async (token) => {
         let data = await model_1.TokenModel.findOneAndUpdate({ refreshToken: token.refreshToken }, { refreshTokenExpired: true });
-        console.log("==============================================", data);
         if (data) {
             return true;
         }
@@ -138,7 +137,9 @@ exports.option = {
         let data = await model_1.TokenModel.findOne({
             refreshToken: refreshToken,
             refreshTokenExpired: false,
-        }).populate({ path: "client" });
+        })
+            .populate({ path: "user", select: "username" })
+            .populate({ path: "client" });
         return data;
     },
     validateScope: async (user, client, scope) => {

@@ -31,57 +31,92 @@ function Oauth20Middleware(req, res, next) {
     request.headers["content-type"] = "application/x-www-form-urlencoded";
     const server = new oauth2_server_1.default({
         model: oauth20_library_1.option,
-        accessTokenLifetime: 3600,
+        accessTokenLifetime: 60,
         allowExtendedTokenAttributes: true,
     });
-    if (req.originalUrl === "/token/auth") {
-        server
-            .token(request, response)
-            .then((token) => {
-            res.send(token);
-        })
-            .catch((err) => {
-            console.log(err);
-            err.statusCode
-                ? res.status(err.statusCode).json(err)
-                : res.send(err).status(400);
-        });
-        return;
-    }
-    if (req.originalUrl === "/user/login") {
-        let username = req.body.username;
-        let password = req.body.password;
-        if (username && password) {
+    switch (req.originalUrl) {
+        case "/token/auth":
+            /**
+           
+           To Generate Access Token Using Refresh Token
+          @param refreshToken
+          @returns  @param   {
+            refreshToken,
+            accessToken,
+          }
+          */
             server
                 .token(request, response)
                 .then((token) => {
-                res.send(token);
+                res.send({
+                    refreshToken: token.refreshToken,
+                    accessToken: token.accessToken,
+                });
             })
                 .catch((err) => {
+                console.log(err);
                 err.statusCode
                     ? res.status(err.statusCode).json(err)
                     : res.send(err).status(400);
             });
-        }
-        else {
-            res.json({ message: "please enter username and password" });
-        }
-    }
-    else {
-        let token = req.headers.authorization.split(" ") || "";
-        if (token[1]) {
-            server
-                .authenticate(request, response)
-                .then((token) => {
-                // return res.send(token);
-                next();
-            })
-                .catch((err) => {
-                return err.statusCode
-                    ? res.status(err.statusCode).json(err)
-                    : res.send(err).status(400);
-            });
-        }
+            break;
+        case "/user/login":
+            /**
+             * Get params username a
+              @param {username,  password, client_id, client_secret, grant_type}
+                @returns    @field
+                                     {
+                                       refreshToken,
+                                       accessToken,
+                                       user
+                                     }
+             */
+            let username = req.body.username;
+            let password = req.body.password;
+            if (username && password) {
+                server
+                    .token(request, response)
+                    .then((token) => {
+                    res.json({
+                        accessToken: token.accessToken,
+                        refreshToken: token.refreshToken,
+                        user: token.user,
+                    });
+                })
+                    .catch((err) => {
+                    err.statusCode
+                        ? res.status(err.statusCode).json(err)
+                        : res.send(err).status(400);
+                });
+            }
+            else {
+                res.json({ message: "please enter username and password" });
+            }
+            break;
+        default:
+            if (!req.headers.authorization) {
+                res.status(404).json({ message: "Token Not Found" });
+                break;
+            }
+            let token = req.headers.authorization.split(" ") || "";
+            if (token[1]) {
+                server
+                    .authenticate(request, response)
+                    .then((token) => {
+                    console.log(token);
+                    next();
+                })
+                    .catch((err) => {
+                    console.error(err);
+                    err.statusCode
+                        ? res.status(err.statusCode).json(err)
+                        : res.send(err).status(400);
+                });
+            }
+            else {
+                res.status(404).json({ message: "Bearer Token Not Found" });
+            }
+            break;
     }
 }
 exports.default = Oauth20Middleware;

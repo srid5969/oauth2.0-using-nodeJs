@@ -1,7 +1,14 @@
-import bcryptjs from "bcrypt";
 require("dotenv").config();
+import bcryptjs from "bcrypt";
 import jsonwebtoken from "jsonwebtoken";
+import {
+  AccessDeniedError,
+  InvalidTokenError,
+  OAuthError,
+  RefreshToken,
+} from "oauth2-server";
 import * as uuid from "uuid";
+import user, { IUser } from "../user/model/user";
 import {
   Client,
   ClientModel,
@@ -11,19 +18,13 @@ import {
   TokenModel,
   User,
 } from "./model";
-import {
-  AccessDeniedError,
-  InvalidTokenError,
-  OAuthError,
-  RefreshToken,
-} from "oauth2-server";
-import user, { IUser } from "../user/model/user";
-import { model } from "mongoose";
 
 const accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
-var now = new Date();
-now.setTime(now.getTime() + 1 * 60 * 1000);
-let expiresIn = now;
+
+let expiresIn = ():Date => {
+  var now = new Date();
+  return new Date(now.setTime(now.getTime() + 1 * 60 * 1000));
+};
 export const option = {
   getClient: async (
     clientId: string,
@@ -41,16 +42,21 @@ export const option = {
     client: Client,
     user: User
   ): Promise<Token | Falsey> => {
-    const _token: IToken = new TokenModel({
+    console.log(expiresIn());
+    
+    const saveToken: IToken = new TokenModel({
       accessToken: token.accessToken,
       refreshToken: token.refreshToken,
       client: client,
       user: user,
       scope: token.scope,
-      expires: expiresIn,
+      expires: expiresIn(),
     });
 
-    return await _token.save();
+    return (await saveToken.save()).populate({
+      path: "user",
+      select: "username",
+    });
   },
   getUser: async (
     username: string,
@@ -58,13 +64,12 @@ export const option = {
   ): Promise<User | Falsey> => {
     return new Promise<any>(async (resolve, reject) => {
       if (!(username && plainPassword)) {
-        new OAuthError("please enter username and password", {
-          name: "no_username_or_password",
-          code: 404,
-        });
-        return reject({
-          message: "please enter username and password",
-        });
+        return reject(
+          new OAuthError("please enter username and password", {
+            name: "no_username_or_password",
+            code: 404,
+          })
+        );
       }
       const data: IUser = await user.findOne({ username }, { password: 1 });
       if (data) {
@@ -77,14 +82,18 @@ export const option = {
 
         const Data = await bcryptjs.compare(plainPassword, data.password);
         if (Data) {
-          let userData = { username, id: data._id };
+          let userData = { username, id: data._id, _id: data._id };
           return resolve(userData);
         } else {
-          reject({ message: "wrong password" });
+          reject(
+            new OAuthError("wrong password", {
+              code: 401,
+              name: "invalid_password",
+            })
+          );
         }
       } else {
         const err = new AccessDeniedError("Bad Request", { code: 404 });
-
         reject(err);
       }
     });
@@ -128,7 +137,10 @@ export const option = {
         });
       }
     } catch (error) {
-      return error;
+      throw new InvalidTokenError("Token Cannot Be Found", {
+        code: 404,
+        name: "invalid JWT token",
+      });
     }
   },
   verifyScope: async function (
@@ -143,7 +155,6 @@ export const option = {
       { refreshToken: token.refreshToken },
       { refreshTokenExpired: true }
     );
-    console.log("==============================================", data);
 
     if (data) {
       return true;
@@ -159,7 +170,9 @@ export const option = {
     let data = await TokenModel.findOne({
       refreshToken: refreshToken,
       refreshTokenExpired: false,
-    }).populate({ path: "client" });
+    })
+      .populate({ path: "user", select: "username" })
+      .populate({ path: "client" });
 
     return data;
   },
