@@ -3,7 +3,10 @@ import oauth2Server, {
   Request as OAuthRequest,
   Response as OAuthResponse,
 } from "oauth2-server";
-import { option } from "./oauth20.library";
+import {container} from "../../../common/iocConfig/config";
+import {OAuthUtil} from "../Util/OAuth.Util";
+
+
 
 export default function Oauth20Middleware(
   req: Request,
@@ -15,7 +18,7 @@ export default function Oauth20Middleware(
   request.headers["content-type"] = "application/x-www-form-urlencoded";
 
   const server = new oauth2Server({
-    model: option,
+    model: container.get(OAuthUtil),
     accessTokenLifetime: 60,
     allowExtendedTokenAttributes: true,
   });

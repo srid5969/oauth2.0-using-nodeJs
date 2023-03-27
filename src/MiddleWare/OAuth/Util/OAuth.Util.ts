@@ -1,14 +1,12 @@
-require("dotenv").config();
-import bcryptjs from "bcrypt";
-import jsonwebtoken from "jsonwebtoken";
 import {
   AccessDeniedError,
   InvalidTokenError,
   OAuthError,
   RefreshToken,
 } from "oauth2-server";
+import bcrypt from "bcrypt";
 import * as uuid from "uuid";
-import user, { IUser } from "../user/model/user";
+
 import {
   Client,
   ClientModel,
@@ -17,33 +15,35 @@ import {
   Token,
   TokenModel,
   User,
-} from "./model";
+} from "../Model/model";
+import { IUser } from "../../../user/Model/user";
+import user from "../../../user/Model/user";
+import jsonwebtoken from "jsonwebtoken";
+import { injectable } from "inversify";
 
-const accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
-
-let expiresIn = ():Date => {
+let expiresIn = (): Date => {
   var now = new Date();
   return new Date(now.setTime(now.getTime() + 1 * 60 * 1000));
 };
-export const option = {
-  getClient: async (
+@injectable()
+class OAuthUtil {
+    accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
+  async getClient(
     clientId: string,
     clientSecret: string
-  ): Promise<Client | Falsey> => {
+  ): Promise<Client | Falsey> {
     const data: Client = await ClientModel.findOne({
       id: clientId,
       secret: clientSecret,
     });
 
     return data;
-  },
-  saveToken: async (
+  }
+  async saveToken(
     token: Token,
     client: Client,
     user: User
-  ): Promise<Token | Falsey> => {
-    console.log(expiresIn());
-    
+  ): Promise<Token | Falsey> {
     const saveToken: IToken = new TokenModel({
       accessToken: token.accessToken,
       refreshToken: token.refreshToken,
@@ -57,11 +57,11 @@ export const option = {
       path: "user",
       select: "username",
     });
-  },
-  getUser: async (
+  }
+  async getUser(
     username: string,
     plainPassword: string
-  ): Promise<User | Falsey> => {
+  ): Promise<User | Falsey> {
     return new Promise<any>(async (resolve, reject) => {
       if (!(username && plainPassword)) {
         return reject(
@@ -80,7 +80,7 @@ export const option = {
          * @param data.password bcrypt password
          */
 
-        const Data = await bcryptjs.compare(plainPassword, data.password);
+        const Data = await bcrypt.compare(plainPassword, data.password);
         if (Data) {
           let userData = { username, id: data._id, _id: data._id };
           return resolve(userData);
@@ -97,32 +97,30 @@ export const option = {
         reject(err);
       }
     });
-  },
-  generateRefreshToken: async (
+  }
+  async generateRefreshToken(
     client: Client,
     user: User,
     scope: string | string[]
-  ): Promise<string> => {
+  ): Promise<string> {
     let refreshTokens: any = await uuid.v4();
     return refreshTokens;
-  },
-  generateAccessToken: async (
+  }
+  async generateAccessToken(
     client: Client,
     user: User,
     scope: string | string[]
-  ): Promise<string> => {
-    return jsonwebtoken.sign({ ...user, client, scope }, accessTokenSecret, {
+  ): Promise<string> {
+    return jsonwebtoken.sign({ ...user, client, scope }, this.accessTokenSecret, {
       expiresIn: "1h",
       algorithm: "HS256",
     });
-  },
-  getAccessToken: async function (
-    accessToken: string
-  ): Promise<Falsey | Token> {
+  }
+  async getAccessToken(accessToken: string): Promise<Falsey | Token> {
     try {
       let data: any = (await jsonwebtoken.verify(
         accessToken,
-        accessTokenSecret,
+        this.accessTokenSecret,
         { algorithms: ["HS256"] }
       )) as any;
       if (data) {
@@ -142,15 +140,12 @@ export const option = {
         name: "invalid JWT token",
       });
     }
-  },
-  verifyScope: async function (
-    token: Token,
-    scope: string | string[]
-  ): Promise<boolean> {
+  }
+  async verifyScope(token: Token, scope: string | string[]): Promise<boolean> {
     throw new Error("Function verifyScope not implemented.");
-    return false;
-  },
-  revokeToken: async (token: RefreshToken | Token): Promise<boolean> => {
+    // return false;
+  }
+  async revokeToken(token: RefreshToken | Token): Promise<boolean> {
     let data = await TokenModel.findOneAndUpdate(
       { refreshToken: token.refreshToken },
       { refreshTokenExpired: true }
@@ -160,12 +155,8 @@ export const option = {
       return true;
     }
     throw new InvalidTokenError("Access Token Expired");
-  },
-  getRefreshToken: async (
-    refreshToken: string
-  ): Promise<RefreshToken | Falsey> => {
-    let present: Date = new Date();
-    console.log(present);
+  }
+  async getRefreshToken(refreshToken: string): Promise<RefreshToken | Falsey> {
     // refreshTokenExpired
     let data = await TokenModel.findOne({
       refreshToken: refreshToken,
@@ -175,12 +166,14 @@ export const option = {
       .populate({ path: "client" });
 
     return data;
-  },
-  validateScope: async (
+  }
+  async validateScope(
     user: User,
     client: Client,
     scope: string | string[]
-  ): Promise<string | string[] | Falsey> => {
-    return "read";
-  },
-};
+  ): Promise<string > {
+    let read:string="read"
+    return Promise.resolve(read);
+  }
+}
+export { OAuthUtil };

@@ -131,8 +131,7 @@ exports.option = {
         throw new oauth2_server_1.InvalidTokenError("Access Token Expired");
     },
     getRefreshToken: async (refreshToken) => {
-        let present = new Date();
-        console.log(present);
+    
         // refreshTokenExpired
         let data = await model_1.TokenModel.findOne({
             refreshToken: refreshToken,

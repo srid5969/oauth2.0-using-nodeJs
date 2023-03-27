@@ -1,11 +1,15 @@
 import { Request, Response } from "express";
-import { UserSignUp } from "../service/user";
+import { UserService } from "../Service/user";
+import { injectable, inject, Container } from "inversify";
+@injectable()
 export class UserController {
+  constructor(@inject(UserService) private readonly userService: UserService) {}
   helloWorld(req: Request, res: Response) {
     res.send({ message: "Hello World" });
   }
   signUp(req: Request, res: Response) {
-    UserSignUp(req.body)
+    this.userService
+      .userSignUp(req.body)
       .then((result) => {
         res.status(200).json(result);
       })
@@ -16,3 +20,4 @@ export class UserController {
       });
   }
 }
+
