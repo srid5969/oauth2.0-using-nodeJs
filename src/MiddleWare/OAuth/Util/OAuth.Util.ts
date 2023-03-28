@@ -21,14 +21,15 @@ import user from "../../../user/Model/user";
 import jsonwebtoken from "jsonwebtoken";
 import { injectable } from "inversify";
 
-let expiresIn = (): Date => {
-  var now = new Date();
-  return new Date(now.setTime(now.getTime() + 1 * 60 * 1000));
-};
+
 @injectable()
 class OAuthUtil {
-    accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
-  async getClient(
+   private accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
+   private expiresIn():Date {
+    var now = new Date();
+    return new Date(now.setTime(now.getTime() + 1 * 60 * 1000));
+   }
+ public async getClient(
     clientId: string,
     clientSecret: string
   ): Promise<Client | Falsey> {
@@ -39,7 +40,7 @@ class OAuthUtil {
 
     return data;
   }
-  async saveToken(
+  public async saveToken(
     token: Token,
     client: Client,
     user: User
@@ -50,7 +51,7 @@ class OAuthUtil {
       client: client,
       user: user,
       scope: token.scope,
-      expires: expiresIn(),
+      expires:this.expiresIn(),
     });
 
     return (await saveToken.save()).populate({
@@ -58,7 +59,7 @@ class OAuthUtil {
       select: "username",
     });
   }
-  async getUser(
+  public async getUser(
     username: string,
     plainPassword: string
   ): Promise<User | Falsey> {
@@ -98,7 +99,7 @@ class OAuthUtil {
       }
     });
   }
-  async generateRefreshToken(
+  public async generateRefreshToken(
     client: Client,
     user: User,
     scope: string | string[]
@@ -106,7 +107,7 @@ class OAuthUtil {
     let refreshTokens: any = await uuid.v4();
     return refreshTokens;
   }
-  async generateAccessToken(
+  public async generateAccessToken(
     client: Client,
     user: User,
     scope: string | string[]
@@ -116,7 +117,7 @@ class OAuthUtil {
       algorithm: "HS256",
     });
   }
-  async getAccessToken(accessToken: string): Promise<Falsey | Token> {
+  public async getAccessToken(accessToken: string): Promise<Falsey | Token> {
     try {
       let data: any = (await jsonwebtoken.verify(
         accessToken,
@@ -141,11 +142,11 @@ class OAuthUtil {
       });
     }
   }
-  async verifyScope(token: Token, scope: string | string[]): Promise<boolean> {
+  public async verifyScope(token: Token, scope: string | string[]): Promise<boolean> {
     throw new Error("Function verifyScope not implemented.");
     // return false;
   }
-  async revokeToken(token: RefreshToken | Token): Promise<boolean> {
+  public async revokeToken(token: RefreshToken | Token): Promise<boolean> {
     let data = await TokenModel.findOneAndUpdate(
       { refreshToken: token.refreshToken },
       { refreshTokenExpired: true }
@@ -156,7 +157,7 @@ class OAuthUtil {
     }
     throw new InvalidTokenError("Access Token Expired");
   }
-  async getRefreshToken(refreshToken: string): Promise<RefreshToken | Falsey> {
+  public async getRefreshToken(refreshToken: string): Promise<RefreshToken | Falsey> {
     // refreshTokenExpired
     let data = await TokenModel.findOne({
       refreshToken: refreshToken,
@@ -167,7 +168,7 @@ class OAuthUtil {
 
     return data;
   }
-  async validateScope(
+  public async validateScope(
     user: User,
     client: Client,
     scope: string | string[]

@@ -3,10 +3,8 @@ import oauth2Server, {
   Request as OAuthRequest,
   Response as OAuthResponse,
 } from "oauth2-server";
-import {container} from "../../../common/iocConfig/config";
-import {OAuthUtil} from "../Util/OAuth.Util";
-
-
+import { container } from "../../../common/iocConfig/config";
+import { OAuthUtil } from "../Util/OAuth.Util";
 
 export default function Oauth20Middleware(
   req: Request,
@@ -24,6 +22,9 @@ export default function Oauth20Middleware(
   });
 
   switch (req.originalUrl) {
+    case "/user/signup":
+      next();
+      break;
     case "/token/auth":
       /**
      
@@ -38,7 +39,7 @@ export default function Oauth20Middleware(
         .token(request, response)
         .then((token) => {
           console.log(token.user);
-          
+
           res.send({
             refreshToken: token.refreshToken,
             accessToken: token.accessToken,
@@ -89,7 +90,7 @@ export default function Oauth20Middleware(
         res.status(404).json({ message: "Token Not Found" });
         break;
       }
-      
+
       let token: any = req.headers.authorization.split(" ") || "";
       if (token[1]) {
         server
@@ -101,11 +102,11 @@ export default function Oauth20Middleware(
           .catch((err) => {
             console.error(err);
 
-             err.statusCode
+            err.statusCode
               ? res.status(err.statusCode).json(err)
               : res.send(err).status(400);
           });
-      }else{
+      } else {
         res.status(404).json({ message: "Bearer Token Not Found" });
       }
       break;

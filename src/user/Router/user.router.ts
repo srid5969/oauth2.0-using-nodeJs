@@ -1,9 +1,10 @@
 import { UserController } from "../Controller/UserController";
 
 let router = require("express").Router();
-import { container } from "/home/ist-014/Documents/OAuth20/src/common/iocConfig/config";
+import {container} from "../../common/iocConfig/config";
+
 
 let controller = container.get<UserController>(UserController);
 router.get("/", controller.helloWorld);
-router.post("/user", controller.signUp);
+router.post("/user/signUp", controller.signUp);
 export default router;

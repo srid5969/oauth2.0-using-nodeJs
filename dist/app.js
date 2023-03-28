@@ -8,8 +8,8 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const config_1 = __importDefault(require("./common/manager/config"));
-const oauth20_1 = __importDefault(require("./MiddleWare/oauth20"));
-const user_router_1 = __importDefault(require("./user/router/user.router"));
+const OAuth20_1 = __importDefault(require("./MiddleWare/OAuth/Authentication/OAuth20"));
+const user_router_1 = __importDefault(require("./user/Router/user.router"));
 const port = 8000;
 mongoose_1.default.connect(config_1.default);
 const database = mongoose_1.default.connection;
@@ -20,7 +20,7 @@ app.use((0, cors_1.default)({ origin: "*" }));
 app.use(body_parser_1.default.json());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
 app.use(express_1.default.json());
-app.use(oauth20_1.default);
+app.use(OAuth20_1.default);
 app.use(user_router_1.default);
 //
 app.listen(port, () => {
