@@ -15,6 +15,12 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -26,47 +32,50 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.option = void 0;
-require("dotenv").config();
-const bcrypt_1 = __importDefault(require("bcrypt"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+exports.OAuthUtil = void 0;
 const oauth2_server_1 = require("oauth2-server");
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const uuid = __importStar(require("uuid"));
-const user_1 = __importDefault(require("../user/model/user"));
-const model_1 = require("./model");
-const accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
-var now = new Date();
-now.setTime(now.getTime() + 1 * 60 * 1000);
-let expiresIn = now;
-exports.option = {
-    getClient: async (clientId, clientSecret) => {
+const model_1 = require("../Model/model");
+const user_1 = __importDefault(require("../../../user/Model/user"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const inversify_1 = require("inversify");
+let expiresIn = () => {
+    var now = new Date();
+    return new Date(now.setTime(now.getTime() + 1 * 60 * 1000));
+};
+let OAuthUtil = class OAuthUtil {
+    constructor() {
+        this.accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
+    }
+    async getClient(clientId, clientSecret) {
         const data = await model_1.ClientModel.findOne({
             id: clientId,
             secret: clientSecret,
         });
         return data;
-    },
-    saveToken: async (token, client, user) => {
+    }
+    async saveToken(token, client, user) {
         const saveToken = new model_1.TokenModel({
             accessToken: token.accessToken,
             refreshToken: token.refreshToken,
             client: client,
             user: user,
             scope: token.scope,
-            expires: expiresIn,
+            expires: expiresIn(),
         });
-        return (await saveToken.save()).populate({ path: "user", select: "username" });
-    },
-    getUser: async (username, plainPassword) => {
+        return (await saveToken.save()).populate({
+            path: "user",
+            select: "username",
+        });
+    }
+    async getUser(username, plainPassword) {
         return new Promise(async (resolve, reject) => {
             if (!(username && plainPassword)) {
-                new oauth2_server_1.OAuthError("please enter username and password", {
+                return reject(new oauth2_server_1.OAuthError("please enter username and password", {
                     name: "no_username_or_password",
                     code: 404,
-                });
-                return reject({
-                    message: "please enter username and password",
-                });
+                }));
             }
             const data = await user_1.default.findOne({ username }, { password: 1 });
             if (data) {
@@ -82,7 +91,10 @@ exports.option = {
                     return resolve(userData);
                 }
                 else {
-                    reject({ message: "wrong password" });
+                    reject(new oauth2_server_1.OAuthError("wrong password", {
+                        code: 401,
+                        name: "invalid_password",
+                    }));
                 }
             }
             else {
@@ -90,20 +102,20 @@ exports.option = {
                 reject(err);
             }
         });
-    },
-    generateRefreshToken: async (client, user, scope) => {
+    }
+    async generateRefreshToken(client, user, scope) {
         let refreshTokens = await uuid.v4();
         return refreshTokens;
-    },
-    generateAccessToken: async (client, user, scope) => {
-        return jsonwebtoken_1.default.sign({ ...user, client, scope }, accessTokenSecret, {
+    }
+    async generateAccessToken(client, user, scope) {
+        return jsonwebtoken_1.default.sign({ ...user, client, scope }, this.accessTokenSecret, {
             expiresIn: "1h",
             algorithm: "HS256",
         });
-    },
-    getAccessToken: async function (accessToken) {
+    }
+    async getAccessToken(accessToken) {
         try {
-            let data = (await jsonwebtoken_1.default.verify(accessToken, accessTokenSecret, { algorithms: ["HS256"] }));
+            let data = (await jsonwebtoken_1.default.verify(accessToken, this.accessTokenSecret, { algorithms: ["HS256"] }));
             if (data) {
                 return new Promise(async function (resolve, reject) {
                     let Data = await model_1.TokenModel.findOne({
@@ -116,22 +128,24 @@ exports.option = {
             }
         }
         catch (error) {
-            return error;
+            throw new oauth2_server_1.InvalidTokenError("Token Cannot Be Found", {
+                code: 404,
+                name: "invalid JWT token",
+            });
         }
-    },
-    verifyScope: async function (token, scope) {
+    }
+    async verifyScope(token, scope) {
         throw new Error("Function verifyScope not implemented.");
-        return false;
-    },
-    revokeToken: async (token) => {
+        // return false;
+    }
+    async revokeToken(token) {
         let data = await model_1.TokenModel.findOneAndUpdate({ refreshToken: token.refreshToken }, { refreshTokenExpired: true });
         if (data) {
             return true;
         }
         throw new oauth2_server_1.InvalidTokenError("Access Token Expired");
-    },
-    getRefreshToken: async (refreshToken) => {
-    
+    }
+    async getRefreshToken(refreshToken) {
         // refreshTokenExpired
         let data = await model_1.TokenModel.findOne({
             refreshToken: refreshToken,
@@ -140,8 +154,13 @@ exports.option = {
             .populate({ path: "user", select: "username" })
             .populate({ path: "client" });
         return data;
-    },
-    validateScope: async (user, client, scope) => {
-        return "read";
-    },
+    }
+    async validateScope(user, client, scope) {
+        let read = "read";
+        return Promise.resolve(read);
+    }
 };
+OAuthUtil = __decorate([
+    (0, inversify_1.injectable)()
+], OAuthUtil);
+exports.OAuthUtil = OAuthUtil;

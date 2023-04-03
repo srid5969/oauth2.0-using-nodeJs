@@ -24,17 +24,21 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const oauth2_server_1 = __importStar(require("oauth2-server"));
-const oauth20_library_1 = require("./oauth20.library");
+const config_1 = require("../../../common/iocConfig/config");
+const OAuth_Util_1 = require("../Util/OAuth.Util");
 function Oauth20Middleware(req, res, next) {
     const request = new oauth2_server_1.Request(req);
     const response = new oauth2_server_1.Response(res);
     request.headers["content-type"] = "application/x-www-form-urlencoded";
     const server = new oauth2_server_1.default({
-        model: oauth20_library_1.option,
+        model: config_1.container.get(OAuth_Util_1.OAuthUtil),
         accessTokenLifetime: 60,
         allowExtendedTokenAttributes: true,
     });
     switch (req.originalUrl) {
+        case "/user/signup":
+            next();
+            break;
         case "/token/auth":
             /**
            
@@ -48,6 +52,7 @@ function Oauth20Middleware(req, res, next) {
             server
                 .token(request, response)
                 .then((token) => {
+                console.log(token.user);
                 res.send({
                     refreshToken: token.refreshToken,
                     accessToken: token.accessToken,
