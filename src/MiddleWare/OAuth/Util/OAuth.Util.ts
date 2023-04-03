@@ -27,7 +27,7 @@ class OAuthUtil {
    private accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
    private expiresIn():Date {
     var now = new Date();
-    return new Date(now.setTime(now.getTime() + 1 * 60 * 1000));
+    return new Date(now.setTime(now.getTime() + 1 * 3600 * 1000));
    }
  public async getClient(
     clientId: string,
@@ -64,6 +64,7 @@ class OAuthUtil {
     plainPassword: string
   ): Promise<User | Falsey> {
     return new Promise<any>(async (resolve, reject) => {
+      
       if (!(username && plainPassword)) {
         return reject(
           new OAuthError("please enter username and password", {
@@ -73,6 +74,7 @@ class OAuthUtil {
         );
       }
       const data: IUser = await user.findOne({ username }, { password: 1 });
+      
       if (data) {
         /**
          * TODO : Login
@@ -84,6 +86,7 @@ class OAuthUtil {
         const Data = await bcrypt.compare(plainPassword, data.password);
         if (Data) {
           let userData = { username, id: data._id, _id: data._id };
+          
           return resolve(userData);
         } else {
           reject(

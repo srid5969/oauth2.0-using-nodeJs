@@ -11,7 +11,7 @@ import oauth20 from "./MiddleWare/OAuth/Authentication/OAuth20";
 import user from "./user/Router/user.router";
 import { container } from "./common/iocConfig/config";
 
-const port: number = 8000;
+const port: number = 8080;
 mongoose.connect(db);
 /**
  * connecting  mongodb
