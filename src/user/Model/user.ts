@@ -15,9 +15,9 @@ export const userSchema: Schema = new Schema<IUser>(
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true, unique: true, select: false },
     role: {
-      enum: {
-        values: ["Admin"],
-      },
+      type: String,
+      enum: ["Patient"],
+      required: [false, "Please specify at role"],
     },
     createdAt: { type: Date, default: Date.now() },
     modifiedAt: { type: Date, default: Date.now() },
@@ -28,7 +28,6 @@ export const userSchema: Schema = new Schema<IUser>(
     autoCreate: false,
   }
 );
-
 
 const User = model<IUser>("users", userSchema);
 export default User;

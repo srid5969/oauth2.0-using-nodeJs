@@ -3,13 +3,13 @@ import express, { Application } from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import bodyParser from "body-parser";
-import reflectMetadata from "reflect-metadata";
+import  "reflect-metadata";
 import morgan from "morgan";
 
 import db from "./common/manager/config";
-import oauth20 from "./MiddleWare/OAuth/Authentication/OAuth20";
-import user from "./user/Router/user.router";
 import { container } from "./common/iocConfig/config";
+import { InversifyExpressServer } from "inversify-express-utils";
+import { AuthMiddleware } from "./MiddleWare/OAuth/Authentication/OAuth20";
 
 const port: number = 8080;
 mongoose.connect(db);
@@ -36,13 +36,18 @@ app.use(express.json());
 /**
  * Used OAuth 2.1 for authentication
  */
-app.use(morgan('combined'));
-app.use(oauth20);
 
-app.use(user);
+let server = new InversifyExpressServer(container, null, null, app);
 /**
  * listing to the  @port 8000
  */
-app.listen(port, () => {
-  console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
-});
+server
+  .setConfig((app) => {
+    var logger = morgan("combined");
+    app.use(logger);
+    app.use(container.resolve(AuthMiddleware).handler);
+  })
+  .build()
+  .listen(port, () => {
+    console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
+  });

@@ -103,7 +103,6 @@ function Oauth20Middleware(req, res, next) {
                 server
                     .authenticate(request, response)
                     .then((token) => {
-                    console.log(token);
                     next();
                 })
                     .catch((err) => {
