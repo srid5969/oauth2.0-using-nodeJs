@@ -6,13 +6,14 @@ import { container } from "../../../common/iocConfig/config";
 import { OAuthUtil } from "../Util/OAuth.Util";
 import { Request, Response, NextFunction } from "express";
 import { injectable } from "inversify";
-import { BaseMiddleware } from "inversify-express-utils";
+import { ExpressMiddlewareInterface, Middleware } from "routing-controllers";
 import { ParamsDictionary } from "express-serve-static-core";
 import { ParsedQs } from "qs";
 
 @injectable()
-export class AuthMiddleware extends BaseMiddleware {
-  handler(req: Request, res: Response, next: NextFunction): void {
+@Middleware({ type: "before" })
+export class AuthMiddleware implements ExpressMiddlewareInterface {
+  use(req: Request, res: Response, next: NextFunction): any {
     const request = new OAuthRequest(req);
     const response = new OAuthResponse(res);
     request.headers["content-type"] = "application/x-www-form-urlencoded";
@@ -24,7 +25,7 @@ export class AuthMiddleware extends BaseMiddleware {
     });
 
     switch (req.originalUrl) {
-      case "/user/signup":        
+      case "/user/signup":
         next();
         break;
       case "/token/auth":

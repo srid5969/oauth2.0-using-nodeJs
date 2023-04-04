@@ -2,26 +2,28 @@ import { Request, Response } from "express";
 import { UserService } from "../Service/user";
 import { inject } from "inversify";
 import {
-  BaseHttpController,
-  controller,
-  httpGet as GetMapping,
-  httpPost as PostMapping,
-  request,
-  response,
-} from "inversify-express-utils";
-@controller("/user")
-export class UserController extends BaseHttpController {
+  Controller,
+  Param,
+  Body,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Req,
+  Res,
+} from "routing-controllers";
+
+@Controller("/user")
+export class UserController {
   constructor(
     @inject("UserService") private readonly userService: UserService
-  ) {
-    super();
+  ) {}
+  @Get("/")
+  public async helloWorld(@Req() req: Request, @Res() res: Response) {
+    res.send({ message: "Hello World" });
   }
-  @GetMapping("/")
-  public async helloWorld(@request() req: Request, @response() res: Response) {
-    this.json({ message: "Hello World" },201)
-  }
-  @PostMapping("/signup")
-  public async signUp(@request() req: Request, @response() res: Response) {
+  @Post("/signup")
+  public async signUp(@Req() req: Request, @Res() res: Response) {
     return await this.userService.userSignUp(req.body);
   }
 }
