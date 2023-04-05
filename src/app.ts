@@ -12,7 +12,7 @@ import { InversifyExpressServer } from "inversify-express-utils";
 import { AuthMiddleware } from "./MiddleWare/OAuth/Authentication/OAuth20";
 
 const port: number = 8080;
-mongoose.connect(db);
+mongoose.connect(db,{dbName:"demo"});
 /**
  * connecting  mongodb
  */

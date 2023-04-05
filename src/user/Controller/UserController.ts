@@ -18,10 +18,17 @@ export class UserController extends BaseHttpController {
   }
   @GetMapping("/")
   public async helloWorld(@request() req: Request, @response() res: Response) {
-    res.json({ message: "Hello World" })
+    res.json({ message: "Hello World" });
   }
   @PostMapping("/signup")
   public async signUp(@request() req: Request, @response() res: Response) {
-    return await this.userService.userSignUp(req.body);
+    return this.userService
+      .userSignUp(req.body)
+      .then((result) => {
+        res.send(result);
+      })
+      .catch((err) => {
+        res.send(err);
+      });
   }
 }

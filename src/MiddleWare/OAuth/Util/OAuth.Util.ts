@@ -27,7 +27,7 @@ class OAuthUtil {
    private accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
    private expiresIn():Date {
     var now = new Date();
-    return new Date(now.setTime(now.getTime() + 1 * 3600 * 1000));
+    return new Date(now.setTime(now.getTime() + 1 * 120 * 1000));
    }
  public async getClient(
     clientId: string,
