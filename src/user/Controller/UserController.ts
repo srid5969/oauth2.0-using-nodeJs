@@ -18,7 +18,7 @@ export class UserController extends BaseHttpController {
   }
   @GetMapping("/")
   public async helloWorld(@request() req: Request, @response() res: Response) {
-    this.json({ message: "Hello World" },201)
+    res.json({ message: "Hello World" })
   }
   @PostMapping("/signup")
   public async signUp(@request() req: Request, @response() res: Response) {
