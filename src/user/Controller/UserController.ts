@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { UserService } from "../Service/user";
 import { Controller, Post, Req, Res } from "@leapjs/router";
 import { Get } from "@leapjs/router";
-import { inject } from "@leapjs/common";
+import { HttpStatus, inject } from "@leapjs/common";
 
 @Controller("/user")
 export class UserController {
@@ -27,11 +27,11 @@ export class UserController {
       return this.userService
         .userSignUp(req.body)
         .then((result) => {
-         return resolve(res.send(result));
+          return resolve(res.status(HttpStatus.OK).send(result));
         })
         .catch((err) => {
           console.log(err);
-         return reject(res.send(err));
+          return resolve(res.status(HttpStatus.CONFLICT).json(err));
         });
     });
   }
