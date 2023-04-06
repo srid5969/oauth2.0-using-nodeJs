@@ -1,6 +1,7 @@
 import { mongoErrorHandler } from "@leapjs/common";
-import { getModelForClass, index, post, prop } from "@typegoose/typegoose";
+import { getModelForClass, index, post, prop ,mongoose as ad} from "@typegoose/typegoose";
 import { IsDefined, IsEmail, MaxLength } from "class-validator";
+import mongoose from "mongoose";
 import { UserStatus } from "../../common/constants";
 import {
   EMPTY_EMAIL,
@@ -16,8 +17,8 @@ import {
 @post("save", mongoErrorHandler("User"))
 @post("findOneAndUpdate", mongoErrorHandler("User"))
 class User {
-  @prop({ allowMixed: 0 })
-  public _id!: any;
+  // @prop({ allowMixed: 0, type: () => mongoose.Schema.Types.ObjectId })
+  public _id!: mongoose.Schema.Types.ObjectId ;
   @prop()
   @IsDefined({ groups: ["create"], message: EMPTY_FIRST_NAME })
   @MaxLength(50, { always: true, message: INVALID_FIRST_NAME })
@@ -47,10 +48,15 @@ class User {
 
 const UserModel = getModelForClass(User, {
   schemaOptions: {
-    collation:"",
+    id: true,
+    _id: true,
     versionKey: false,
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
   },
 });
+console.log("dnsflasdnfjajs");
 
+const database = mongoose.connection;
+database.on("error", (error) => console.error(error));
+database.once("connected", () => console.log("Database Connected"));
 export { User, UserModel };

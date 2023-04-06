@@ -6,17 +6,16 @@ import { inject } from "@leapjs/common";
 
 @Controller("/user")
 export class UserController {
-  constructor(@inject(UserService) private userService: UserService) {}
-  //  private  userService!: UserService;
-  // @inject(() => UserService) userService!: UserService;
+  // constructor(@inject(UserService) private userService: UserService) {}
+  @inject(() => UserService) userService!: UserService;
   @Get("/")
   public async helloWorld(
     @Req() req: Request,
     @Res() res: Response
   ): Promise<Response> {
     // Logger
-    return new Promise<Response>((resolve, reject) => {
-      resolve(res.json({ message: "Hello World" }));
+    return new Promise<Response>(async (resolve, reject) => {
+      resolve(res.json(await this.userService.helloWorld()));
     });
   }
   @Post("/signup")
@@ -24,15 +23,15 @@ export class UserController {
     @Req() req: Request,
     @Res() res: Response
   ): Promise<Response> {
-    
     return new Promise<Response>((resolve, reject) => {
       return this.userService
         .userSignUp(req.body)
         .then((result) => {
-          resolve(res.send(result));
+         return resolve(res.send(result));
         })
         .catch((err) => {
-          reject(res.json(err));
+          console.log(err);
+         return reject(res.send(err));
         });
     });
   }
