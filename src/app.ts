@@ -1,21 +1,26 @@
-import { AuthMiddleware } from "./MiddleWare/OAuth/Authentication/OAuth20";
-import { Logger } from "@leapjs/common";
-
 import "reflect-metadata";
-import config from "./common/manager/config";
-
+import { Logger } from "@leapjs/common";
+import { AuthMiddleware } from "./MiddleWare/OAuth/Authentication/OAuth20";
+import { acFilterAttributes } from "@leapjs/access-control";
 import { LeapApplication } from "@leapjs/core";
 import { ExpressAdapter } from "@leapjs/router";
-import { UserController } from "./user/Controller/UserController";
-import ErrorHandler from "./common/Handle-Error/error-handler";
 import { json } from "express-mung";
 import helmet from "helmet";
-import { acFilterAttributes } from "@leapjs/access-control";
+import ErrorHandler from "./common/Handle-Error/error-handler";
+import { UserController } from "./user/Controller/UserController";
+import { configurations } from "./common/manager/config";
+import { mongoose } from "@typegoose/typegoose";
 
-const port = 8081;
+const port = configurations.port;
 const application: LeapApplication = new LeapApplication();
-
-application.connectToDatabase(config);
+mongoose.connect(configurations.mongodbHostName || "", {
+  dbName: configurations.dataBaseName || "",
+});
+const database = mongoose.connection;
+database.on("error", (error) => console.error());
+database.once("connected", () =>
+  Logger.log(`Connected to the database`, "LeapApplication")
+);
 
 const server = application.create(new ExpressAdapter(), {
   // prefix: "v1",
@@ -27,8 +32,11 @@ const server = application.create(new ExpressAdapter(), {
   controllers: [UserController],
   afterMiddlewares: [ErrorHandler],
 });
+
 server.listen(port, () => {
-  console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
+  Logger.log(
+    `⚡️[server]: Server is running at http://localhost:${port}`,
+    "NODE Server"
+  );
 });
 Logger.log(`Initializing settings`, "ConfigurationManager");
-Logger.log(`Connecting to the database`, "LeapApplication");

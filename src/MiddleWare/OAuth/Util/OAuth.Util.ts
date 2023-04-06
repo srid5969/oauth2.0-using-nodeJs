@@ -1,6 +1,3 @@
-
-
-
 import {
   AccessDeniedError,
   InvalidTokenError,
@@ -19,14 +16,15 @@ import {
   TokenModel,
   User,
 } from "../Model/model";
-// import { IUser } from "../../../user/Model/user";
-// import user from "../../../user/Model/user";
+
 import jsonwebtoken from "jsonwebtoken";
 import { injectable } from "@leapjs/common";
-import { User as IUser,UserModel as user} from "../../../user/Model/User";
+import { User as IUser, UserModel as user } from "../../../user/Model/User";
+import { configurations } from "../../../common/manager/config";
+
 @injectable()
 class OAuthUtil {
-  private accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
+  private accessTokenSecret = configurations.jwtSecret || "";
   private expiresIn(): Date {
     var now = new Date();
     return new Date(now.setTime(now.getTime() + 1 * 120 * 1000));
@@ -35,7 +33,7 @@ class OAuthUtil {
     clientId: string,
     clientSecret: string
   ): Promise<Client | Falsey> {
-    const data: Client |any= await ClientModel.findOne({
+    const data: Client | any = await ClientModel.findOne({
       id: clientId,
       secret: clientSecret,
     });
@@ -74,7 +72,10 @@ class OAuthUtil {
           })
         );
       }
-      const data: IUser|null = await user.findOne({ username }, { password: 1 });
+      const data: IUser | null = await user.findOne(
+        { username },
+        { password: 1 }
+      );
 
       if (data) {
         /**
@@ -125,7 +126,9 @@ class OAuthUtil {
       }
     );
   }
-  public async getAccessToken(accessToken: string): Promise<Falsey|any | Token> {
+  public async getAccessToken(
+    accessToken: string
+  ): Promise<Falsey | any | Token> {
     try {
       let data: any = (await jsonwebtoken.verify(
         accessToken,
@@ -134,7 +137,6 @@ class OAuthUtil {
       )) as any;
       if (data) {
         return new Promise(async function (resolve, reject) {
-          
           let Data: any = await TokenModel.findOne({
             accessToken: accessToken,
           });

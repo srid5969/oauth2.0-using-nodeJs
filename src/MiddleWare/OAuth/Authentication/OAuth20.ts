@@ -20,7 +20,7 @@ export class AuthMiddleware {
 
     const request = new OAuthRequest(req);
     const response = new OAuthResponse(res);
-    request.headers["content-type"] = "application/x-www-form-urlencoded";
+    // request.headers["content-type"] = "application/x-www-form-urlencoded";
     const server = new oauth2Server({
       model: this.option,
       accessTokenLifetime: 60,
