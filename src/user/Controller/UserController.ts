@@ -1,34 +1,39 @@
 import { Request, Response } from "express";
 import { UserService } from "../Service/user";
-import { inject } from "inversify";
-import {
-  BaseHttpController,
-  controller,
-  httpGet as GetMapping,
-  httpPost as PostMapping,
-  request,
-  response,
-} from "inversify-express-utils";
-@controller("/user")
-export class UserController extends BaseHttpController {
-  constructor(
-    @inject("UserService") private readonly userService: UserService
-  ) {
-    super();
+import { Controller, Post, Req, Res } from "@leapjs/router";
+import { Get } from "@leapjs/router";
+import { inject } from "@leapjs/common";
+
+@Controller("/user")
+export class UserController {
+  constructor(@inject(UserService) private userService: UserService) {}
+  //  private  userService!: UserService;
+  // @inject(() => UserService) userService!: UserService;
+  @Get("/")
+  public async helloWorld(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    // Logger
+    return new Promise<Response>((resolve, reject) => {
+      resolve(res.json({ message: "Hello World" }));
+    });
   }
-  @GetMapping("/")
-  public async helloWorld(@request() req: Request, @response() res: Response) {
-    res.json({ message: "Hello World" });
-  }
-  @PostMapping("/signup")
-  public async signUp(@request() req: Request, @response() res: Response) {
-    return this.userService
-      .userSignUp(req.body)
-      .then((result) => {
-        res.send(result);
-      })
-      .catch((err) => {
-        res.send(err);
-      });
+  @Post("/signup")
+  public async signUp(
+    @Req() req: Request,
+    @Res() res: Response
+  ): Promise<Response> {
+    
+    return new Promise<Response>((resolve, reject) => {
+      return this.userService
+        .userSignUp(req.body)
+        .then((result) => {
+          resolve(res.send(result));
+        })
+        .catch((err) => {
+          reject(res.json(err));
+        });
+    });
   }
 }

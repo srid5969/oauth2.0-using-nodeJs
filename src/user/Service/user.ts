@@ -1,8 +1,8 @@
+import { injectable } from "@leapjs/common";
 import bcrypt from "bcrypt";
 
-import { injectable } from "inversify";
 import "reflect-metadata";
-import user, { IUser } from "../Model/user";
+import { UserModel as user, User as IUser } from "../../user/Model/User";
 
 export interface UserServiceI {
   userSignUp(data: IUser): Promise<IUser | any>;

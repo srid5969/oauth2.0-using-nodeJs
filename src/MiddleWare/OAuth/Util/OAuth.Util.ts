@@ -1,3 +1,6 @@
+
+
+
 import {
   AccessDeniedError,
   InvalidTokenError,
@@ -16,24 +19,23 @@ import {
   TokenModel,
   User,
 } from "../Model/model";
-import { IUser } from "../../../user/Model/user";
-import user from "../../../user/Model/user";
+// import { IUser } from "../../../user/Model/user";
+// import user from "../../../user/Model/user";
 import jsonwebtoken from "jsonwebtoken";
-import { injectable } from "inversify";
-
-
+import { injectable } from "@leapjs/common";
+import { User as IUser,UserModel as user} from "../../../user/Model/User";
 @injectable()
 class OAuthUtil {
-   private accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
-   private expiresIn():Date {
+  private accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
+  private expiresIn(): Date {
     var now = new Date();
     return new Date(now.setTime(now.getTime() + 1 * 120 * 1000));
-   }
- public async getClient(
+  }
+  public async getClient(
     clientId: string,
     clientSecret: string
   ): Promise<Client | Falsey> {
-    const data: Client = await ClientModel.findOne({
+    const data: Client |any= await ClientModel.findOne({
       id: clientId,
       secret: clientSecret,
     });
@@ -51,7 +53,7 @@ class OAuthUtil {
       client: client,
       user: user,
       scope: token.scope,
-      expires:this.expiresIn(),
+      expires: this.expiresIn(),
     });
 
     return (await saveToken.save()).populate({
@@ -64,7 +66,6 @@ class OAuthUtil {
     plainPassword: string
   ): Promise<User | Falsey> {
     return new Promise<any>(async (resolve, reject) => {
-      
       if (!(username && plainPassword)) {
         return reject(
           new OAuthError("please enter username and password", {
@@ -73,8 +74,8 @@ class OAuthUtil {
           })
         );
       }
-      const data: IUser = await user.findOne({ username }, { password: 1 });
-      
+      const data: IUser|null = await user.findOne({ username }, { password: 1 });
+
       if (data) {
         /**
          * TODO : Login
@@ -86,7 +87,7 @@ class OAuthUtil {
         const Data = await bcrypt.compare(plainPassword, data.password);
         if (Data) {
           let userData = { username, id: data._id, _id: data._id };
-          
+
           return resolve(userData);
         } else {
           reject(
@@ -115,12 +116,16 @@ class OAuthUtil {
     user: User,
     scope: string | string[]
   ): Promise<string> {
-    return jsonwebtoken.sign({ ...user, client, scope }, this.accessTokenSecret, {
-      expiresIn: "1h",
-      algorithm: "HS256",
-    });
+    return jsonwebtoken.sign(
+      { ...user, client, scope },
+      this.accessTokenSecret,
+      {
+        expiresIn: "1h",
+        algorithm: "HS256",
+      }
+    );
   }
-  public async getAccessToken(accessToken: string): Promise<Falsey | Token> {
+  public async getAccessToken(accessToken: string): Promise<Falsey|any | Token> {
     try {
       let data: any = (await jsonwebtoken.verify(
         accessToken,
@@ -129,6 +134,7 @@ class OAuthUtil {
       )) as any;
       if (data) {
         return new Promise(async function (resolve, reject) {
+          
           let Data: any = await TokenModel.findOne({
             accessToken: accessToken,
           });
@@ -145,7 +151,10 @@ class OAuthUtil {
       });
     }
   }
-  public async verifyScope(token: Token, scope: string | string[]): Promise<boolean> {
+  public async verifyScope(
+    token: Token,
+    scope: string | string[]
+  ): Promise<boolean> {
     throw new Error("Function verifyScope not implemented.");
     // return false;
   }
@@ -160,7 +169,9 @@ class OAuthUtil {
     }
     throw new InvalidTokenError("Access Token Expired");
   }
-  public async getRefreshToken(refreshToken: string): Promise<RefreshToken | Falsey> {
+  public async getRefreshToken(
+    refreshToken: string
+  ): Promise<RefreshToken | Falsey> {
     // refreshTokenExpired
     let data = await TokenModel.findOne({
       refreshToken: refreshToken,
@@ -175,8 +186,8 @@ class OAuthUtil {
     user: User,
     client: Client,
     scope: string | string[]
-  ): Promise<string > {
-    let read:string="read"
+  ): Promise<string> {
+    let read: string = "read";
     return Promise.resolve(read);
   }
 }
