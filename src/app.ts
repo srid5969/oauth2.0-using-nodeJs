@@ -24,9 +24,8 @@ database.once("connected", () =>
 );
 
 const server = application.create(new ExpressAdapter(), {
-  // prefix: "v1",
   corsOptions: {
-    origin: "http://localhost",
+    origin: "*",
     credentials: true,
   },
   beforeMiddlewares: [AuthMiddleware, helmet(), json(acFilterAttributes)],
