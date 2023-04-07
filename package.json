@@ -23,6 +23,7 @@
     "@leapjs/common": "^0.5.38",
     "@leapjs/core": "^0.5.38",
     "@leapjs/crud": "^0.5.38",
+    "@leapjs/messaging": "^0.5.38",
     "@leapjs/router": "^0.5.38",
     "@typegoose/typegoose": "^11.0.0",
     "bcrypt": "^5.1.0",
@@ -57,9 +58,9 @@
     "@types/uuid": "^9.0.1",
     "shx": "^0.3.4",
     "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.2.0",
     "typeorm": "^0.3.12",
-    "typescript": "^5.0.2",
-    "ts-node-dev": "^2.0.0"
+    "typescript": "^5.0.2"
   }
 }
