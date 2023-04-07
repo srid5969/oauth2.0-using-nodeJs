@@ -36,7 +36,7 @@ class User {
   // id?: string; id?: string;
 
   @prop({ required: true })
-  username?: string;
+  email?: string;
 
   @prop({ required: true, default: "Patient" })
   resourceType!: string;
