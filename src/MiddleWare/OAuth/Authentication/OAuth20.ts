@@ -15,12 +15,12 @@ export class AuthMiddleware {
   // @inject(OAuthUtil)
   //  private readonly option!: OAuthUtil;
   public before(req: any, res: Response, next: NextFunction): void {
-    console.log("==================");
 
 
-    const request = new OAuthRequest(req);
+    let request :any= new OAuthRequest(req);
     const response = new OAuthResponse(res);
-    // request.headers["content-type"] = "application/x-www-form-urlencoded";
+    
+    request.headers["content-type"] = "application/x-www-form-urlencoded" 
     const server = new oauth2Server({
       model: this.option,
       accessTokenLifetime: 60,
@@ -29,7 +29,6 @@ export class AuthMiddleware {
 
     switch (req.originalUrl) {
       case "/user/signup":
-        console.log(req.body);
         
         next();
         break;
@@ -52,7 +51,6 @@ export class AuthMiddleware {
             });
           })
           .catch((err) => {
-            console.log(err);
             err.statusCode
               ? res.status(err.statusCode).json(err)
               : res.send(err).status(400);
@@ -73,6 +71,7 @@ export class AuthMiddleware {
         let username = req.body.username;
         let password = req.body.password;
         if (username && password) {
+
           server
             .token(request, response)
             .then((token) => {
@@ -83,6 +82,7 @@ export class AuthMiddleware {
               });
             })
             .catch((err) => {
+              
               err.statusCode
                 ? res.status(err.statusCode).json(err)
                 : res.send(err).status(400);

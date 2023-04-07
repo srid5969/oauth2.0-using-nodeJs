@@ -13,7 +13,6 @@ class ErrorHandler {
 
   // eslint-disable-next-line consistent-return
   public after(err: any, req: any, res: any, next: (error?: any) => any): void {
-    console.log("req");
     
     let error = err;
 

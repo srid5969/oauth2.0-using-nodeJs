@@ -1,10 +1,10 @@
+import bcrypt from "bcrypt";
 import {
   AccessDeniedError,
   InvalidTokenError,
   OAuthError,
   RefreshToken,
 } from "oauth2-server";
-import bcrypt from "bcrypt";
 import * as uuid from "uuid";
 
 import {
@@ -17,10 +17,10 @@ import {
   User,
 } from "../Model/model";
 
-import jsonwebtoken from "jsonwebtoken";
 import { injectable } from "@leapjs/common";
-import { User as IUser, UserModel as user } from "../../../user/Model/User";
+import jsonwebtoken from "jsonwebtoken";
 import { configurations } from "../../../common/manager/config";
+import { UserModel as user } from "../../../User/Model/User";
 
 @injectable()
 class OAuthUtil {
@@ -45,19 +45,23 @@ class OAuthUtil {
     client: Client,
     user: User
   ): Promise<Token | Falsey> {
-    const saveToken: IToken = new TokenModel({
+    const tokenData:IToken = {
       accessToken: token.accessToken,
       refreshToken: token.refreshToken,
       client: client,
       user: user,
-      scope: token.scope,
+      // scope: token.scope,
       expires: this.expiresIn(),
-    });
-
-    return (await saveToken.save()).populate({
+    };
+    
+    const savetoken = new TokenModel(tokenData);
+    const save = await savetoken.save();
+    const saved :any= await save.populate({
       path: "user",
       select: "username",
     });
+    return saved;
+    // return saved
   }
   public async getUser(
     username: string,
@@ -72,7 +76,7 @@ class OAuthUtil {
           })
         );
       }
-      const data: IUser | null = await user.findOne(
+      const data: any | null = await user.findOne(
         { username },
         { password: 1 }
       );
@@ -175,7 +179,7 @@ class OAuthUtil {
     refreshToken: string
   ): Promise<RefreshToken | Falsey> {
     // refreshTokenExpired
-    let data = await TokenModel.findOne({
+    let data :any= await TokenModel.findOne({
       refreshToken: refreshToken,
       refreshTokenExpired: false,
     })
