@@ -1,10 +1,10 @@
+import bcrypt from "bcrypt";
 import {
   AccessDeniedError,
   InvalidTokenError,
   OAuthError,
   RefreshToken,
 } from "oauth2-server";
-import bcrypt from "bcrypt";
 import * as uuid from "uuid";
 
 import {
@@ -16,24 +16,24 @@ import {
   TokenModel,
   User,
 } from "../Model/model";
-import { IUser } from "../../../user/Model/user";
-import user from "../../../user/Model/user";
-import jsonwebtoken from "jsonwebtoken";
-import { injectable } from "inversify";
 
+import { injectable } from "@leapjs/common";
+import jsonwebtoken from "jsonwebtoken";
+import { configurations } from "../../../common/manager/config";
+import { UserModel as user } from "../../../User/Model/User";
 
 @injectable()
 class OAuthUtil {
-   private accessTokenSecret = process.env.jwtSecretKey || "dfghs3e";
-   private expiresIn():Date {
+  private accessTokenSecret = configurations.jwtSecret || "";
+  private expiresIn(): Date {
     var now = new Date();
     return new Date(now.setTime(now.getTime() + 1 * 120 * 1000));
-   }
- public async getClient(
+  }
+  public async getClient(
     clientId: string,
     clientSecret: string
   ): Promise<Client | Falsey> {
-    const data: Client = await ClientModel.findOne({
+    const data: Client | any = await ClientModel.findOne({
       id: clientId,
       secret: clientSecret,
     });
@@ -45,26 +45,29 @@ class OAuthUtil {
     client: Client,
     user: User
   ): Promise<Token | Falsey> {
-    const saveToken: IToken = new TokenModel({
+    const tokenData:IToken = {
       accessToken: token.accessToken,
       refreshToken: token.refreshToken,
       client: client,
       user: user,
-      scope: token.scope,
-      expires:this.expiresIn(),
-    });
-
-    return (await saveToken.save()).populate({
+      // scope: token.scope,
+      expires: this.expiresIn(),
+    };
+    
+    const savetoken = new TokenModel(tokenData);
+    const save = await savetoken.save();
+    const saved :any= await save.populate({
       path: "user",
       select: "username",
     });
+    return saved;
+    // return saved
   }
   public async getUser(
     username: string,
     plainPassword: string
   ): Promise<User | Falsey> {
     return new Promise<any>(async (resolve, reject) => {
-      
       if (!(username && plainPassword)) {
         return reject(
           new OAuthError("please enter username and password", {
@@ -73,8 +76,11 @@ class OAuthUtil {
           })
         );
       }
-      const data: IUser = await user.findOne({ username }, { password: 1 });
-      
+      const data: any | null = await user.findOne(
+        { username },
+        { password: 1 }
+      );
+
       if (data) {
         /**
          * TODO : Login
@@ -86,7 +92,7 @@ class OAuthUtil {
         const Data = await bcrypt.compare(plainPassword, data.password);
         if (Data) {
           let userData = { username, id: data._id, _id: data._id };
-          
+
           return resolve(userData);
         } else {
           reject(
@@ -115,12 +121,18 @@ class OAuthUtil {
     user: User,
     scope: string | string[]
   ): Promise<string> {
-    return jsonwebtoken.sign({ ...user, client, scope }, this.accessTokenSecret, {
-      expiresIn: "1h",
-      algorithm: "HS256",
-    });
+    return jsonwebtoken.sign(
+      { ...user, client, scope },
+      this.accessTokenSecret,
+      {
+        expiresIn: "1h",
+        algorithm: "HS256",
+      }
+    );
   }
-  public async getAccessToken(accessToken: string): Promise<Falsey | Token> {
+  public async getAccessToken(
+    accessToken: string
+  ): Promise<Falsey | any | Token> {
     try {
       let data: any = (await jsonwebtoken.verify(
         accessToken,
@@ -145,7 +157,10 @@ class OAuthUtil {
       });
     }
   }
-  public async verifyScope(token: Token, scope: string | string[]): Promise<boolean> {
+  public async verifyScope(
+    token: Token,
+    scope: string | string[]
+  ): Promise<boolean> {
     throw new Error("Function verifyScope not implemented.");
     // return false;
   }
@@ -160,9 +175,11 @@ class OAuthUtil {
     }
     throw new InvalidTokenError("Access Token Expired");
   }
-  public async getRefreshToken(refreshToken: string): Promise<RefreshToken | Falsey> {
+  public async getRefreshToken(
+    refreshToken: string
+  ): Promise<RefreshToken | Falsey> {
     // refreshTokenExpired
-    let data = await TokenModel.findOne({
+    let data :any= await TokenModel.findOne({
       refreshToken: refreshToken,
       refreshTokenExpired: false,
     })
@@ -175,8 +192,8 @@ class OAuthUtil {
     user: User,
     client: Client,
     scope: string | string[]
-  ): Promise<string > {
-    let read:string="read"
+  ): Promise<string> {
+    let read: string = "read";
     return Promise.resolve(read);
   }
 }

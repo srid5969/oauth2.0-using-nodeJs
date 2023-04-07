@@ -1,45 +1,66 @@
-import { Schema, model, Document } from "mongoose";
+import { getModelForClass, mongoose, post, prop } from "@typegoose/typegoose";
+import { mongoErrorHandler } from "@leapjs/common";
+import { User as UserModelClass } from "./../../../User/Model/User";
+import { Type } from "class-transformer";
 
-export interface IToken extends Document {
-  accessToken: string;
-  refreshToken: string;
-  client: Client;
-  user: any;
-  scope: string;
-  expires: any;
-  refreshTokenExpired:boolean
+const { Schema, model } = mongoose;
+@post("save", mongoErrorHandler("users"))
+@post("findOneAndUpdate", mongoErrorHandler("users"))
+export class IToken {
+  // @prop({ _id: true })
+  // id?: string; id?: string;
+
+  @prop({ required: true })
+  public accessToken?: string;
+
+  @prop({ required: true })
+  public refreshToken?: string;
+  // @Type(() => Client)
+  @prop({ required: true ,allowMixed:0})
+  public client?: Client;
+
+  @Type(() => UserModelClass)
+  @prop({ required: true, allowMixed:0})
+  public user?: User;
+
+  @prop({ required: false })
+  public scope?: string;
+
+  @prop({ required: true,allowMixed:0 })
+  public expires?: any;
+
+  @prop({ required: true, default: false })
+  public refreshTokenExpired?: boolean;
 }
-const tokenSchema = new Schema<IToken>({
-  accessToken: { type: String},
-  refreshToken: { type: String},
-  user: { type: Schema.Types.ObjectId, ref: "users"},
-  client: { type: Schema.Types.ObjectId, ref: "client"},
-  scope: { type: String},
-  expires: { type: Object},
-  refreshTokenExpired:{type:Boolean,default:false}
+export const TokenModel = getModelForClass(IToken);
+
+// export interface IToken {
+//   accessToken: string;
+//   refreshToken: string;
+//   client: Client;
+//   user: any;
+//   scope: string;
+//   expires: any;
+//   refreshTokenExpired: boolean;
+// }
+export const tokenSchema = new Schema<IToken>({
+  accessToken: { type: String },
+  refreshToken: { type: String },
+  user: { type: Schema.Types.ObjectId, ref: "users" },
+  client: { type: Schema.Types.ObjectId, ref: "client" },
+  scope: { type: String },
+  expires: { type: Object },
+  refreshTokenExpired: { type: Boolean, default: false },
 });
 
-export const TokenModel = model<IToken>("Token", tokenSchema);
+// export const TokenModel = model<IToken>("Token", tokenSchema);
 
-
-const clientSchema=new Schema<Client>({
-  grants:{type:Schema.Types.Mixed},
-  id:{type:Schema.Types.Mixed},
-})
+const clientSchema = new Schema<Client>({
+  grants: { type: Schema.Types.Mixed },
+  id: { type: Schema.Types.Mixed },
+});
 
 export const ClientModel = model<Client>("client", clientSchema);
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ===================================================
 export type Falsey = "" | 0 | false | null | undefined;

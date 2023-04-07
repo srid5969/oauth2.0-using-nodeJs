@@ -1,53 +1,43 @@
-"use strict";
-import express, { Application } from "express";
-import mongoose from "mongoose";
-import cors from "cors";
-import bodyParser from "body-parser";
 import "reflect-metadata";
-import morgan from "morgan";
-
-import db from "./common/manager/config";
-import { container } from "./common/iocConfig/config";
-import { InversifyExpressServer } from "inversify-express-utils";
+import { Logger } from "@leapjs/common";
 import { AuthMiddleware } from "./MiddleWare/OAuth/Authentication/OAuth20";
+import { acFilterAttributes } from "@leapjs/access-control";
+import { LeapApplication } from "@leapjs/core";
+import { ExpressAdapter } from "@leapjs/router";
+import { json } from "express-mung";
+import helmet from "helmet";
+import ErrorHandler from "./common/Handle-Error/error-handler";
+import { UserController } from "./User/Controller/UserController";
+import { configurations } from "./common/manager/config";
+import { mongoose } from "@typegoose/typegoose";
+import { AccessTokenGeneratorForRefreshToken } from './MiddleWare/OAuth/TokenGenerator/AccessTokenGenerator';
 
-const port: number = 8080;
-mongoose.connect(db,{dbName:"demo"});
-/**
- * connecting  mongodb
- */
+const port = configurations.port;
+const application: LeapApplication = new LeapApplication();
+mongoose.connect(configurations.mongodbHostName || "", {
+  dbName: configurations.dataBaseName || "",
+});
 const database = mongoose.connection;
 database.on("error", (error) => console.error());
-database.once("connected", () => console.log("Database Connected"));
+database.once("connected", () =>
+  Logger.log(`Connected to the database`, "LeapApplication")
+);
 
-const app: Application = express();
-/**
- * Added cors to resolve cors  @errors
- * @default 'GET,HEAD,PUT,PATCH,POST,DELETE'
- */
-app.use(cors({ origin: "*" }));
-app.use(bodyParser.json());
-/**
- * Returns middleware that only parses json and only looks at requests
- * where the Content-Type header matches the type option.
- */
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.json());
-/**
- * Used OAuth 2.1 for authentication
- */
+const server = application.create(new ExpressAdapter(), {
+  // prefix: "v1",
+  corsOptions: {
+    origin: "http://localhost",
+    credentials: true,
+  },
+  beforeMiddlewares: [AuthMiddleware, helmet(), json(acFilterAttributes)],
+  controllers: [UserController,AccessTokenGeneratorForRefreshToken],
+  afterMiddlewares: [ErrorHandler],
+});
 
-let server = new InversifyExpressServer(container, null, null, app);
-/**
- * listing to the  @port 8000
- */
-server
-  .setConfig((app) => {
-    var logger = morgan("combined");
-    app.use(logger);
-    app.use(container.resolve(AuthMiddleware).handler);
-  })
-  .build()
-  .listen(port, () => {
-    console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
-  });
+server.listen(port, () => {
+  Logger.log(
+    `⚡️[server]: Server is running at http://localhost:${port}`,
+    "NODE Server"
+  );
+});
+Logger.log(`Initializing settings`, "ConfigurationManager");

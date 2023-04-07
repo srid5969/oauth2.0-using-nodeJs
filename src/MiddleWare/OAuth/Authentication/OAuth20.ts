@@ -1,30 +1,35 @@
+import { Middleware } from "@leapjs/router";
+import { NextFunction, Response } from "express";
 import oauth2Server, {
   Request as OAuthRequest,
   Response as OAuthResponse,
 } from "oauth2-server";
-import { container } from "../../../common/iocConfig/config";
+// import { inject } from "@leapjs/common";
+import { inject } from "@leapjs/common";
+import "reflect-metadata";
 import { OAuthUtil } from "../Util/OAuth.Util";
-import { Request, Response, NextFunction } from "express";
-import { injectable } from "inversify";
-import { BaseMiddleware } from "inversify-express-utils";
-import { ParamsDictionary } from "express-serve-static-core";
-import { ParsedQs } from "qs";
 
-@injectable()
-export class AuthMiddleware extends BaseMiddleware {
-  handler(req: Request, res: Response, next: NextFunction): void {
-    const request = new OAuthRequest(req);
+@Middleware()
+export class AuthMiddleware {
+  constructor(@inject(OAuthUtil) private option: OAuthUtil) {}
+  // @inject(OAuthUtil)
+  //  private readonly option!: OAuthUtil;
+  public before(req: any, res: Response, next: NextFunction): void {
+
+
+    let request :any= new OAuthRequest(req);
     const response = new OAuthResponse(res);
-    request.headers["content-type"] = "application/x-www-form-urlencoded";
-
+    
+    request.headers["content-type"] = "application/x-www-form-urlencoded" 
     const server = new oauth2Server({
-      model: container.get(OAuthUtil),
+      model: this.option,
       accessTokenLifetime: 60,
       allowExtendedTokenAttributes: true,
     });
 
     switch (req.originalUrl) {
-      case "/user/signup":        
+      case "/user/signup":
+        
         next();
         break;
       case "/token/auth":
@@ -46,7 +51,6 @@ export class AuthMiddleware extends BaseMiddleware {
             });
           })
           .catch((err) => {
-            console.log(err);
             err.statusCode
               ? res.status(err.statusCode).json(err)
               : res.send(err).status(400);
@@ -67,6 +71,7 @@ export class AuthMiddleware extends BaseMiddleware {
         let username = req.body.username;
         let password = req.body.password;
         if (username && password) {
+
           server
             .token(request, response)
             .then((token) => {
@@ -77,6 +82,7 @@ export class AuthMiddleware extends BaseMiddleware {
               });
             })
             .catch((err) => {
+              
               err.statusCode
                 ? res.status(err.statusCode).json(err)
                 : res.send(err).status(400);
