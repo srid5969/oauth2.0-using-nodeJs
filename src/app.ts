@@ -10,7 +10,7 @@ import ErrorHandler from "./common/Handle-Error/error-handler";
 import { UserController } from "./User/Controller/UserController";
 import { configurations } from "./common/manager/config";
 import { mongoose } from "@typegoose/typegoose";
-import { AccessTokenGeneratorForRefreshToken } from './MiddleWare/OAuth/TokenGenerator/AccessTokenGenerator';
+import { AccessTokenGeneratorForRefreshToken } from "./MiddleWare/OAuth/TokenGenerator/AccessTokenGenerator";
 
 const port = configurations.port;
 const application: LeapApplication = new LeapApplication();
@@ -30,7 +30,7 @@ const server = application.create(new ExpressAdapter(), {
     credentials: true,
   },
   beforeMiddlewares: [AuthMiddleware, helmet(), json(acFilterAttributes)],
-  controllers: [UserController,AccessTokenGeneratorForRefreshToken],
+  controllers: [UserController, AccessTokenGeneratorForRefreshToken],
   afterMiddlewares: [ErrorHandler],
 });
 
