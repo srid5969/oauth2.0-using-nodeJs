@@ -1,8 +1,5 @@
 import { mongoErrorHandler } from "@leapjs/common";
 import { getModelForClass, index, post, prop } from "@typegoose/typegoose";
-@index({ email: 1 }, { unique: true })
-@post("save", mongoErrorHandler("users"))
-@post("findOneAndUpdate", mongoErrorHandler("users"))
 class HumanName {
   @prop({ required: true })
   use!: string;
@@ -31,8 +28,10 @@ class Address {
   postalCode!: string;
 }
 
+@index({ email: 1, phone: 1 }, { unique: true })
+@post("save", mongoErrorHandler("users"))
+@post("findOneAndUpdate", mongoErrorHandler("users"))
 class User {
-
   // @prop({ _id: true })
   // id?: string; id?: string;
 
@@ -66,11 +65,10 @@ class User {
 
 const UserModel = getModelForClass(User, {
   schemaOptions: {
-    collection:"users",
+    collection: "users",
     versionKey: false,
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
   },
 });
 
 export { User, UserModel };
-                                                      

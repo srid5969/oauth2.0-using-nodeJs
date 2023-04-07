@@ -64,20 +64,20 @@ class OAuthUtil {
     // return saved
   }
   public async getUser(
-    username: string,
+    email: string,
     plainPassword: string
   ): Promise<User | Falsey> {
     return new Promise<any>(async (resolve, reject) => {
-      if (!(username && plainPassword)) {
+      if (!(email && plainPassword)) {
         return reject(
-          new OAuthError("please enter username and password", {
-            name: "no_username_or_password",
+          new OAuthError("please enter email and password", {
+            name: "no_email_or_password",
             code: 404,
           })
         );
       }
       const data: any | null = await user.findOne(
-        { username },
+        { email:email },
         { password: 1 }
       );
 
@@ -91,7 +91,7 @@ class OAuthUtil {
 
         const Data = await bcrypt.compare(plainPassword, data.password);
         if (Data) {
-          let userData = { username, id: data._id, _id: data._id };
+          let userData = { email, id: data._id, _id: data._id };
 
           return resolve(userData);
         } else {
@@ -183,7 +183,7 @@ class OAuthUtil {
       refreshToken: refreshToken,
       refreshTokenExpired: false,
     })
-      .populate({ path: "user", select: "username" })
+      .populate({ path: "user", select: "email username" })
       .populate({ path: "client" });
 
     return data;
