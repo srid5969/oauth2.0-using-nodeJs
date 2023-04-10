@@ -1,16 +1,16 @@
-import "reflect-metadata";
-import { Logger } from "@leapjs/common";
-import { AuthMiddleware } from "./MiddleWare/OAuth/Authentication/OAuth20";
 import { acFilterAttributes } from "@leapjs/access-control";
+import { Logger } from "@leapjs/common";
 import { LeapApplication } from "@leapjs/core";
 import { ExpressAdapter } from "@leapjs/router";
+import { mongoose } from "@typegoose/typegoose";
 import { json } from "express-mung";
 import helmet from "helmet";
+import "reflect-metadata";
 import ErrorHandler from "./common/Handle-Error/error-handler";
-import { UserController } from "./User/Controller/UserController";
 import { configurations } from "./common/manager/config";
-import { mongoose } from "@typegoose/typegoose";
 import { AccessTokenGeneratorForRefreshToken } from "./MiddleWare/OAuth/TokenGenerator/AccessTokenGenerator";
+import { OTPController } from "./OTP/Controller/OTPController";
+import { UserController } from "./User/Controller/UserController";
 
 const port = configurations.port;
 const application: LeapApplication = new LeapApplication();
@@ -28,8 +28,8 @@ const server = application.create(new ExpressAdapter(), {
     origin: "*",
     credentials: true,
   },
-  beforeMiddlewares: [AuthMiddleware, helmet(), json(acFilterAttributes)],
-  controllers: [UserController, AccessTokenGeneratorForRefreshToken],
+  beforeMiddlewares: [ helmet(), json(acFilterAttributes)],
+  controllers: [UserController, AccessTokenGeneratorForRefreshToken,OTPController],
   afterMiddlewares: [ErrorHandler],
 });
 

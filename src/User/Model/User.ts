@@ -1,6 +1,6 @@
 import { mongoErrorHandler } from "@leapjs/common";
 import { getModelForClass, index, post, prop } from "@typegoose/typegoose";
-class HumanName {
+class NomineeName {
   @prop({ required: true })
   use!: string;
 
@@ -45,7 +45,7 @@ class User {
   active!: boolean;
 
   @prop({ required: true, allowMixed: 0 })
-  name!: HumanName[];
+  name!: NomineeName[];
 
   @prop({ required: true })
   gender!: string;
