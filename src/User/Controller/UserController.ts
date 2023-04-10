@@ -6,6 +6,7 @@ import { HttpStatus, inject } from "@leapjs/common";
 import { AuthMiddleware } from '../../MiddleWare/OAuth/Authentication/OAuth20';
 
 @Controller("/user")
+@UseBefore(AuthMiddleware)
 export class UserController {
   // constructor(@inject(UserService) private userService: UserService) {}
   @inject(() => UserService) userService!: UserService;

@@ -10,7 +10,7 @@ class OTPModel {
   @prop({ required: true })
   public otp?: number;
 
-  @prop({ required: true })
+  @prop({ required: true ,default:Date.now()})
   public createdAt!: Date;
 }
 const OTP = getModelForClass(OTPModel, {});

@@ -32,7 +32,7 @@ export class UserService {
       if (registeredUser) {
         return resolve(true);
       }
-      return reject(false);
+      return resolve(false);
     });
   }
   public async forgotPassword() {}
